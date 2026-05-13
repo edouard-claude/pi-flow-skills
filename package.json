@@ -1,0 +1,34 @@
+{
+  "name": "pi-flow-skills",
+  "version": "0.1.0",
+  "description": "BMAD-inspired sprint workflow for Pi: brainstorm, brief, PRD, architecture, epics, sprint, story/dev/review/commit cycle. Includes flow-auto, a bash orchestrator that pipelines stories through fresh Pi sessions.",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "skills",
+    "bmad",
+    "workflow",
+    "sprint",
+    "agent",
+    "prd",
+    "architecture"
+  ],
+  "author": "Edouard CLAUDE <edouard@squirrel.fr> (https://github.com/edouard-claude)",
+  "license": "MIT",
+  "homepage": "https://github.com/edouard-claude/pi-flow-skills",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edouard-claude/pi-flow-skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/edouard-claude/pi-flow-skills/issues"
+  },
+  "pi": {
+    "skills": ["./skills"]
+  },
+  "files": [
+    "skills",
+    "README.md",
+    "LICENSE"
+  ]
+}
