@@ -3,7 +3,7 @@ name: flow-dev
 description: 'DEV phase of a story: red-green-refactor per task, strict respect of project-context, comprehensive tests, halt
   conditions. Updates sprint-status ready-for-dev -> in-progress -> review. Use after /flow-story on a ready-for-dev story.
   No pause except for an explicit halt condition.'
-version: 0.1.0
+version: 0.2.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
@@ -27,7 +27,8 @@ You are a developer in execution mode. The story file is your brief. You code co
 ## Process
 
 ### Step 1 — Mark in-progress
-Update sprint-status: `ready-for-dev` → `in-progress`, `currentStory = <id>`.
+
+Edit only `development_status[<story-id>]` from `ready-for-dev` (or `in-progress` if resuming) to `in-progress`. Do NOT add new keys. Do NOT touch the `dependencies` block.
 
 ### Step 2 — Detect review continuation
 If the story was in `review` with unresolved `[AI-Review]` items, read them and address them first.
@@ -67,7 +68,7 @@ Update the story file:
 - Add **Change Log** entry with date
 - Add **Dev Notes**: decisions made, surprises encountered, emerging patterns
 
-Update sprint-status: `in-progress` → `review`.
+Edit only `development_status[<story-id>]` from `in-progress` to `review`. Decisions, file lists, dev notes belong in the story file — never in sprint-status.yaml.
 
 ## Output
 

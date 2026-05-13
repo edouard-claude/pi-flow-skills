@@ -3,7 +3,7 @@ name: flow-commit
 description: 'COMMIT phase of a story: builds a conventional-commits message (type(scope): description) from the story file
   and the diff, proposes it to the user, applies it, then updates sprint-status review -> done and identifies the next story.
   Use after /flow-review verdict approved.'
-version: 0.1.0
+version: 0.2.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
@@ -72,14 +72,16 @@ Present the drafted message. Ask for explicit validation:
 
 ### Step 5 — Update sprint-status
 
-- Story status: `review` → `done`
-- `currentStory` → `null`
-- Identify the **next ready story** (`ready-for-dev`, dependencies satisfied) and surface it in the output
+Edit only `development_status[<story-id>]` from `review` to `done`. Nothing else. Don't add `currentStory` keys, don't add comments — keep the YAML pristine.
+
+Then surface (in your stdout, NOT in the YAML) the **next ready story** (`ready-for-dev` or `backlog` with deps satisfied via `dependencies:`).
 
 ### Step 6 — Epic completion check
-If all stories of the epic are `done`:
-- Note: "Epic <epic-id> complete."
-- Suggest `/flow-retro`
+
+If all stories of the epic are `done` in `development_status`:
+- Update `development_status[epic-NNN]` from `in-progress` to `done`
+- Surface in stdout: "Epic <epic-id> complete. Run /flow-retro to wrap it up."
+- Leave `development_status[epic-NNN-retrospective]: optional` untouched (the retrospective skill will flip it to `done`)
 
 ## Output
 

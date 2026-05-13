@@ -3,7 +3,7 @@ name: flow-story
 description: 'CREATE phase of a story: exhaustive context engine (epic, architecture, project-context, git log, neighbor stories).
   Produces a story file so rich another LLM dev can implement without asking questions. Updates sprint-status.yaml backlog
   -> ready-for-dev. Use to prepare a story before /flow-dev.'
-version: 0.1.0
+version: 0.2.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
@@ -99,8 +99,16 @@ As a ..., I want ..., so that ...
 ```
 
 ### Step 6 — Update sprint-status
-- `backlog` → `ready-for-dev`
-- No change to `currentStory` (reserved for `/flow-dev`)
+
+Edit only the single line `development_status[<story-id>]` from `backlog` to `ready-for-dev`. Do NOT touch any other entry. Do NOT modify the `dependencies` block — it's auto-managed by `/flow-sprint`.
+
+Example:
+```yaml
+development_status:
+  ...
+  story-001-03: ready-for-dev   # was: backlog
+  ...
+```
 
 ## Output
 

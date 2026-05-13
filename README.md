@@ -17,14 +17,15 @@ The `flow-auto` orchestrator pre-checks all four. The individual skills (`flow-h
 ## Installation
 
 ```bash
-pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.7
+pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.0
 ```
 
 ## Skills
 
 | Skill | Phase | Purpose |
 |---|---|---|
-| `flow-help` | anytime | Entry point — full sprint dashboard (epics + stories with status) + next-command recommendation |
+| `flow-help` | anytime | Orientation — detects current phase, recommends ONE next command. Lightweight (no dashboard). |
+| `flow-status` | anytime | Pure sprint dashboard (epics + stories with status symbols). Cheap, read-only. |
 | `flow-brainstorm` | analysis | Guided ideation (HMW, Crazy 8s, SCAMPER, Working Backwards, 5 Whys) |
 | `flow-brief` | analysis | Product brief (4-stage elicitation) |
 | `flow-introspect` | brownfield | Scans existing repo → `project-context.md` + `current-state.md` |
@@ -49,7 +50,18 @@ pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.7
 **Brownfield:**
 `/flow-help` → `/flow-introspect` → branch as needed.
 
-**Anytime:** `/flow-help`, `/flow-quick`, `/flow-course-correct`.
+**Anytime:** `/flow-help`, `/flow-status`, `/flow-quick`, `/flow-course-correct`.
+
+## Upgrading from v0.1.x to v0.2.0 (breaking change)
+
+v0.2.0 switches `sprint-status.yaml` to a BMAD-compatible format: a flat `development_status` map of `id: status` (no more free-form `notes` / `title` / `dependsOn` per story — those live in epic and story markdown files). This eliminates YAML corruption from `:` in note strings.
+
+Migrate an existing project:
+```bash
+~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/scripts/migrate-v0.2.py \
+  .agents/implementation/sprint-status.yaml
+```
+The script backs up the old file to `.bak.v0.1` and extracts `dependencies` from the legacy `dependsOn` fields.
 
 ## flow-auto (batch mode)
 

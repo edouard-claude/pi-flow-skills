@@ -3,7 +3,7 @@ name: flow-retro
 description: End-of-epic retrospective in party mode (multi-role dialogues), with critical readiness exploration and preparation
   for the next epic. Captures lessons, updates project-context.md, generates action items. Use when all stories of an epic
   are done.
-version: 0.1.0
+version: 0.2.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
@@ -109,7 +109,7 @@ Short but sincere celebration. Acknowledge wins.
 ### Step 11 — Save + update artifacts
 - `.agents/implementation/retro-epic-<NNN>-<date>.md` finalized
 - **Update `.agents/project-context.md`** if emerging patterns (conventions to lock in for subsequent agents)
-- Update sprint-status: tag the epic as `retrospected`
+- Update sprint-status: set `development_status[epic-NNN-retrospective]` from `optional` to `done`
 
 ### Step 12 — Final summary + handoff
 5-line summary:

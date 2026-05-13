@@ -3,7 +3,7 @@ name: flow-review
 description: 'REVIEW phase of a story: parallel adversarial review with 3 reviewers (Blind Hunter, Edge Case Hunter, Acceptance
   Auditor), triage of findings into Blockers/Should-fix/Nice-to-have/Noise, [AI-Review] action items added to the story file
   when rework is needed. Keeps sprint-status review (approved) OR sends back to in-progress. Use after /flow-dev.'
-version: 0.1.0
+version: 0.2.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
@@ -74,7 +74,7 @@ Append a section at the bottom of the story file:
 - [ ] <description>
 ```
 
-Update sprint-status: `review` → `in-progress` (back to `/flow-dev` to handle the items).
+Edit only `development_status[<story-id>]` from `review` to `in-progress` (back to `/flow-dev` to handle the items). Don't write findings into sprint-status.yaml — they belong in the story file.
 
 #### If **clean** (only optional nice-to-have)
 Append a **Senior Review** section to the story file:
@@ -88,7 +88,7 @@ Append a **Senior Review** section to the story file:
 **Verdict**: approved.
 ```
 
-Update sprint-status: keep `review` (waiting for `/flow-commit`).
+Don't touch sprint-status — keep `development_status[<id>]: review` as-is (waiting for `/flow-commit`).
 
 ## Output
 

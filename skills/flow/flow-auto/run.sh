@@ -53,7 +53,7 @@ if ! find "$PI_AGENT_DIR/skills" "$PI_AGENT_DIR/git" \
      -type d -name "flow-story" 2>/dev/null | grep -q .; then
   echo "ERROR: flow-* skills not found under $PI_AGENT_DIR" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.7" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.0" >&2
   exit 1
 fi
 
@@ -76,29 +76,39 @@ fi
 echo ">>> pre-flight OK." >&2
 
 next_story() {
-  # Idempotency: prioritize a story already in progress (in-progress / review)
-  # before starting a new one. Lets you restart run.sh after a crash.
+  # BMAD-style sprint-status: 'development_status' is a flat key:status map;
+  # 'dependencies' is auto-managed by flow-sprint. We iterate development_status
+  # in declaration order (epic-by-epic), prioritizing in-progress/review (resume)
+  # before fresh backlog/ready-for-dev (with satisfied deps).
   uvx --quiet --with pyyaml python3 - "$STATUS" <<'PY'
-import sys, yaml
+import sys, yaml, re
 path = sys.argv[1]
 with open(path) as f:
     data = yaml.safe_load(f)
-stories = data.get("stories", [])
-# Priority 1: story already in progress
-for s in stories:
-    if s.get("status") in ("in-progress", "review"):
-        print(s["id"])
-        sys.exit(0)
-# Priority 2: next ready story with satisfied dependencies
-done_ids = {s["id"] for s in stories if s.get("status") == "done"}
-for s in stories:
-    if s.get("status") not in ("backlog", "ready-for-dev"):
+ds = data.get("development_status", {}) or {}
+deps_map = data.get("dependencies", {}) or {}
+
+STORY = re.compile(r"^story-\d+-\d+$")
+
+# Priority 1: a story already in flight
+for sid, status in ds.items():
+    if not STORY.match(sid):
         continue
-    deps = s.get("dependsOn", []) or []
-    if all(d in done_ids for d in deps):
-        print(s["id"])
+    if status in ("in-progress", "review"):
+        print(sid)
         sys.exit(0)
-sys.exit(0)
+
+# Priority 2: next eligible (backlog / ready-for-dev with satisfied deps)
+done_ids = {sid for sid, s in ds.items() if STORY.match(sid) and s == "done"}
+for sid, status in ds.items():
+    if not STORY.match(sid):
+        continue
+    if status not in ("backlog", "ready-for-dev"):
+        continue
+    deps = deps_map.get(sid) or []
+    if all(d in done_ids for d in deps):
+        print(sid)
+        sys.exit(0)
 PY
 }
 
@@ -108,17 +118,13 @@ import sys, yaml
 path, sid = sys.argv[1], sys.argv[2]
 with open(path) as f:
     data = yaml.safe_load(f)
-for s in data.get("stories", []):
-    if s["id"] == sid:
-        print(s.get("status", "?"))
-        sys.exit(0)
-print("missing")
+ds = data.get("development_status", {}) or {}
+print(ds.get(sid, "missing"))
 PY
 }
 
-# Fallback (option C): force a status transition in sprint-status.yaml if
-# the LLM didn't update it after a phase. Explicit log when we intervene.
-# Returns non-zero if the story is missing (corruption).
+# Fallback: force a status transition in sprint-status.yaml when the LLM
+# fails to update development_status[<id>] itself. Logs the override.
 force_status() {
   local sid="$1"; local expected="$2"
   local current
@@ -127,25 +133,28 @@ force_status() {
     return 0
   fi
   if [ "$current" = "missing" ]; then
-    echo "ABORT: story '$sid' missing from $STATUS (broken YAML?)" >&2
+    echo "ABORT: story '$sid' missing from development_status in $STATUS (broken YAML or not in sprint)?" >&2
     return 1
   fi
-  echo "WARN: forcing status for $sid ($current → $expected, LLM didn't update)" >&2
+  echo "WARN: forcing status for $sid ($current -> $expected, LLM didn't update)" >&2
   uvx --quiet --with pyyaml python3 - "$STATUS" "$sid" "$expected" <<'PY'
 import sys, yaml
+from pathlib import Path
 path, sid, new_status = sys.argv[1], sys.argv[2], sys.argv[3]
-with open(path) as f:
-    data = yaml.safe_load(f)
-for s in data.get("stories", []):
-    if s["id"] == sid:
-        s["status"] = new_status
-        break
-if new_status == "done":
-    if "sprint" in data and isinstance(data["sprint"], dict):
-        if data["sprint"].get("currentStory") == sid:
-            data["sprint"]["currentStory"] = None
-with open(path, "w") as f:
-    yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
+text = Path(path).read_text()
+# Patch only the matching `<sid>: <old>` line, leave structure pristine.
+import re
+new_text, n = re.subn(
+    rf"^(\s*{re.escape(sid)}:\s*)\S+\s*$",
+    lambda m: m.group(1) + new_status,
+    text,
+    count=1,
+    flags=re.MULTILINE,
+)
+if n == 0:
+    print(f"ERROR: regex did not match '{sid}:' in {path}", file=sys.stderr)
+    sys.exit(1)
+Path(path).write_text(new_text)
 PY
 }
 
@@ -166,21 +175,25 @@ Rules:
    dependency, test impossible to write), write the blocker into the relevant
    story file's Dev Notes section and exit with a clear error message.
 6. The $FLOW_AUTO=1 env var means: this is gospel, not optional.
-7. CRITICAL — sprint-status.yaml update. Before exiting, you MUST update
-   .agents/implementation/sprint-status.yaml to reflect the new status of
-   the story you just worked on. State machine (5 states):
-     backlog → ready-for-dev → in-progress → review → done
+7. CRITICAL — sprint-status.yaml update. The file has TWO blocks:
+     development_status: { <id>: <status>, ... }   <- EDIT ONLY THIS LINE
+     dependencies:       { ... }                   <- NEVER touch (auto-managed)
+   You MUST edit ONE line: `development_status[<story-id>]: <new-status>`.
+   Nothing else. No new keys, no comments, no free text.
+   State machine (5 states): backlog -> ready-for-dev -> in-progress -> review -> done.
    Transitions per skill:
-     - flow-story   → status: ready-for-dev
-     - flow-dev     → status: review (or stay in-progress if halt condition)
-     - flow-review  → APPROVED: keep status: review, append "Senior Review"
-                                section to the story file (do NOT mark done).
-                      REWORK:   status: in-progress, add [AI-Review] items
-                                (next flow-dev resumes the cycle).
-     - flow-commit  → status: done, currentStory: null
-   Preserve YAML indentation and structure exactly. Do NOT break the file.
-   If you cannot determine the right transition, write a note in Dev Notes
-   and exit with a non-zero error message — do not leave the YAML stale.
+     - flow-story   -> set status to: ready-for-dev
+     - flow-dev     -> set status to: review (or leave in-progress on halt)
+     - flow-review  -> APPROVED: do NOT change status (keep review), append a
+                                 "## Senior Review" section to the story file.
+                       REWORK:   set status to: in-progress, add [AI-Review]
+                                 items at the bottom of the story file.
+     - flow-commit  -> set status to: done. If all stories of the epic are
+                       done, also flip development_status[epic-NNN]: done.
+   All free-form text (decisions, dev notes, review findings, file lists)
+   belongs in the markdown story file, NEVER in sprint-status.yaml.
+   If you can't determine the right transition, write a note in the story
+   file's Dev Notes and exit non-zero — do not leave the YAML inconsistent.
 
 You are inside a bash loop that pipelines flow-story → flow-dev → flow-review →
 flow-commit per story across the whole sprint. Each invocation must terminate
