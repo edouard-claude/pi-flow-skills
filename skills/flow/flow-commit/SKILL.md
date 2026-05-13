@@ -24,9 +24,17 @@ Tu produis un commit qui résume ce que la story a livré, du point de vue de qu
 ## Process
 
 ### Step 1 — Sanity checks
+
+**Pré-check git** : si le dossier n'est pas un repo git (`git rev-parse --git-dir` échoue), initialise-le :
+```bash
+git init -b main
+```
+Pas de message d'erreur, c'est attendu pour les projets greenfield où le premier commit vient de l'agent.
+
+**Puis** :
 - `git status` : confirme que les fichiers de la File List du story sont bien modifiés
-- Si fichiers non listés modifiés : signale et demande (peut-être bug, peut-être oubli File List)
-- Si rien à committer : stop, demande à l'utilisateur
+- Si fichiers non listés modifiés : signale et demande (peut-être bug, peut-être oubli File List). **Mode batch (`$FLOW_AUTO=1`)** : ajoute-les si ils sont dans le scope évident de la story, sinon écris une note dans Dev Notes et exit non-zero.
+- Si rien à committer : stop, demande à l'utilisateur. **Mode batch** : exit non-zero avec message clair.
 
 ### Step 2 — Compose le message
 

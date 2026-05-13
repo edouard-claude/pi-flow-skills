@@ -17,14 +17,14 @@ The `flow-auto` orchestrator pre-checks all four. The individual skills (`flow-h
 ## Installation
 
 ```bash
-pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.1
+pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.2
 ```
 
 ## Skills
 
 | Skill | Phase | Purpose |
 |---|---|---|
-| `flow-help` | anytime | Entry point — diagnoses state, recommends next command |
+| `flow-help` | anytime | Entry point — full sprint dashboard (epics + stories with status) + next-command recommendation |
 | `flow-brainstorm` | analysis | Guided ideation (HMW, Crazy 8s, SCAMPER, Working Backwards, 5 Whys) |
 | `flow-brief` | analysis | Product brief (4-stage elicitation) |
 | `flow-introspect` | brownfield | Scans existing repo → `project-context.md` + `current-state.md` |
