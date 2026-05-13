@@ -4,10 +4,20 @@ BMAD-inspired sprint workflow for [Pi](https://pi.dev). Carries a project from c
 
 All artifacts are stored under `.agents/` at the project root (planning + implementation), feeding the next agent invocation with rich context.
 
+## Requirements
+
+- **OS**: macOS, Linux, or Windows via WSL / Git Bash. Not tested on native PowerShell.
+- **`pi`** (≥ a recent build supporting `--print`, `--no-session`, `--mode json`, `--append-system-prompt`) — https://pi.dev
+- **`bash`** ≥ 3.2 (default on macOS; any modern Linux)
+- **`uv`** (provides `uvx`) — used to parse `sprint-status.yaml` with PyYAML on the fly. https://docs.astral.sh/uv/
+- **`jq`** — used to format the streamed JSON event flow into readable output. Bypassable with `PI_RAW=1`.
+
+The `flow-auto` orchestrator pre-checks all four. The individual skills (`flow-help`, `flow-prd`, etc.) only require `pi` itself.
+
 ## Installation
 
 ```bash
-pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.0
+pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.1
 ```
 
 ## Skills

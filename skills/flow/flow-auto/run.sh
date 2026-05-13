@@ -35,6 +35,26 @@ if ! command -v uvx >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v jq >/dev/null 2>&1; then
+  echo "ERREUR : jq requis pour formater le flux JSON Pi." >&2
+  echo "  macOS:    brew install jq" >&2
+  echo "  Linux:    apt install jq  (ou équivalent)" >&2
+  echo "  bypass:   PI_RAW=1 bash $0  (sortie JSON brute, sans jq)" >&2
+  if [ "${PI_RAW:-0}" != "1" ]; then
+    exit 1
+  fi
+fi
+
+# Pré-vol : skills flow-* doivent être chargés dans Pi.
+# On vérifie la présence sur disque (Pi les découvre récursivement).
+SKILLS_ROOT="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/skills"
+if ! find "$SKILLS_ROOT" -type d -name "flow-story" 2>/dev/null | grep -q .; then
+  echo "ERREUR : skills flow-* introuvables sous $SKILLS_ROOT" >&2
+  echo "Installe le package :" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.1" >&2
+  exit 1
+fi
+
 next_story() {
   uvx --quiet --with pyyaml python3 - "$STATUS" <<'PY'
 import sys, yaml
