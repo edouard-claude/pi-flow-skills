@@ -17,7 +17,7 @@ The `flow-auto` orchestrator pre-checks all four. The individual skills (`flow-h
 ## Installation
 
 ```bash
-pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.3
+pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.4
 ```
 
 ## Skills
@@ -56,8 +56,10 @@ pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.3
 Loops over all `ready-for-dev` stories in `sprint-status.yaml`, running each through the full CREATE → DEV → REVIEW → COMMIT cycle. Each step runs in a fresh Pi session (`pi --print --no-session`), equivalent to a `/clear` between stories.
 
 ```bash
-bash ~/.pi/agent/skills/flow/flow-auto/run.sh
+bash ~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.sh
 ```
+
+Path assumes install via `pi install git:github.com/edouard-claude/pi-flow-skills`. For shorter typing, alias it: `alias flow-auto='bash ~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.sh'`.
 
 Requirements: `pi`, `uvx` (for YAML parsing), `jq` (for live event formatting).
 

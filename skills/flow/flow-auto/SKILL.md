@@ -2,7 +2,7 @@
 name: flow-auto
 description: 'Orchestrator that loops through every ready-for-dev story in the sprint in order, chaining /flow-story -> /flow-dev
   -> /flow-review -> /flow-commit with a fresh Pi session per story (equivalent to /clear). Skill = doc + companion run.sh.
-  Launch: bash ~/.pi/agent/skills/flow/flow-auto/run.sh'
+  Launch: bash ~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.sh'
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
@@ -18,7 +18,7 @@ A Pi skill is text instructions, not a program. To orchestrate multiple Pi invoc
 
 ## The companion script
 
-`~/.pi/agent/skills/flow/flow-auto/run.sh`
+`~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.sh`
 
 For each `ready-for-dev` story (or `backlog` with satisfied dependencies):
 1. `pi --print --no-session "/flow-story <id>"`
@@ -36,7 +36,7 @@ The loop stops when:
 ## Launch
 
 ```bash
-bash ~/.pi/agent/skills/flow/flow-auto/run.sh [path/sprint-status.yaml]
+bash ~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.sh [path/sprint-status.yaml]
 ```
 
 Default argument: `.agents/implementation/sprint-status.yaml`

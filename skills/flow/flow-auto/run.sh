@@ -3,7 +3,7 @@
 # loop over every ready-for-dev story in the sprint, restarting Pi with --no-session
 # between each call (equivalent to /clear).
 #
-# Usage: bash ~/.pi/agent/skills/flow/flow-auto/run.sh [.agents/implementation/sprint-status.yaml]
+# Usage: bash ~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.sh [.agents/implementation/sprint-status.yaml]
 
 set -euo pipefail
 
@@ -51,7 +51,7 @@ SKILLS_ROOT="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/skills"
 if ! find "$SKILLS_ROOT" -type d -name "flow-story" 2>/dev/null | grep -q .; then
   echo "ERROR: flow-* skills not found under $SKILLS_ROOT" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.3" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.4" >&2
   exit 1
 fi
 
