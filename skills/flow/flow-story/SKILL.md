@@ -1,6 +1,8 @@
 ---
 name: flow-story
-description: "Phase CREATE d'une story : story context engine exhaustif (epic, architecture, project-context, git log, stories voisines). Produit un story file si riche qu'un autre LLM dev peut implémenter sans poser de questions. Update sprint-status.yaml backlog → ready-for-dev. À utiliser pour préparer une story avant /flow-dev."
+description: 'CREATE phase of a story: exhaustive context engine (epic, architecture, project-context, git log, neighbor stories).
+  Produces a story file so rich another LLM dev can implement without asking questions. Updates sprint-status.yaml backlog
+  -> ready-for-dev. Use to prepare a story before /flow-dev.'
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
@@ -8,51 +10,51 @@ url: https://github.com/edouard-claude
 
 # flow-story — context engine (CREATE only)
 
-Tu es developer peer en mode préparation. Tu ne codes pas. Tu rassembles tout le contexte nécessaire pour qu'un autre LLM (ou toi en mode `/flow-dev`) puisse implémenter sans ambiguïté.
+You are a peer developer in preparation mode. You don't code. You gather all the context needed so that another LLM (or you in `/flow-dev` mode) can implement without ambiguity.
 
-## Quand l'utiliser
+## When to use
 
-- Story `backlog` à préparer avant implémentation
-- Re-préparation d'une story dont le contexte a évolué
-- Première phase du cycle `flow-story → flow-dev → flow-review → flow-commit`
+- `backlog` story to prepare before implementation
+- Re-preparation of a story whose context has changed
+- First phase of the `flow-story → flow-dev → flow-review → flow-commit` cycle
 
-## Inputs (obligatoires)
+## Inputs (required)
 
-- `.agents/implementation/sprint-status.yaml` (trouve la story par id)
-- L'epic parent dans `.agents/planning/epics/`
+- `.agents/implementation/sprint-status.yaml` (find the story by id)
+- The parent epic in `.agents/planning/epics/`
 - `.agents/planning/architecture.md`
 - `.agents/project-context.md`
-- `git log -20` (patterns récents, conventions implicites)
-- Stories voisines dans `.agents/implementation/stories/` (apprentissages)
+- `git log -20` (recent patterns, implicit conventions)
+- Neighbor stories in `.agents/implementation/stories/` (learnings)
 
 ## Process
 
 ### Step 1 — Discover target story
-- Trouve la story `<id>` dans sprint-status
-- Si pas trouvée, stop avec liste des stories disponibles
-- Si déjà `ready-for-dev` : en mode interactif, demande si refaire ou skip ; **en mode batch (`$FLOW_AUTO=1`), skip silencieusement et exit 0**
+- Find the story `<id>` in sprint-status
+- If not found, stop with a list of available stories
+- If already `ready-for-dev`: in interactive mode, ask whether to redo or skip; **in batch mode (`$FLOW_AUTO=1`), skip silently and exit 0**
 
 ### Step 2 — Exhaustive context gathering
-**Ne saute aucune source** :
-- L'epic parent (full lecture)
-- Architecture (sections pertinentes)
+**Skip no source**:
+- The parent epic (full read)
+- Architecture (relevant sections)
 - Project-context (conventions, patterns)
-- Stories voisines (mêmes composants, leçons)
-- Git log : commits récents touchant les fichiers prévus
-- Tests existants des composants touchés
+- Neighbor stories (same components, lessons learned)
+- Git log: recent commits on the planned files
+- Existing tests of the touched components
 
 ### Step 3 — Architecture compliance
-Pour chaque composant touché :
-- Quel pattern le repo utilise déjà ?
-- Quels fichiers UPDATE / CREATE / DELETE ?
-- Quels tests existants ne pas casser ?
+For each touched component:
+- What pattern does the repo already use?
+- Which files UPDATE / CREATE / DELETE?
+- Which existing tests must not break?
 
-### Step 4 — Web research (si pertinent)
-Si la story touche à une lib externe ou une API tierce, vérifie la doc actuelle (versions, breaking changes récents).
+### Step 4 — Web research (if relevant)
+If the story touches an external lib or third-party API, check current docs (versions, recent breaking changes).
 
-### Step 5 — Produit le story file
+### Step 5 — Produce the story file
 
-`.agents/implementation/stories/story-<id>.md` :
+`.agents/implementation/stories/story-<id>.md`:
 
 ```markdown
 ---
@@ -63,57 +65,57 @@ size: M
 created: <date>
 ---
 
-# story-001-01 — <titre>
+# story-001-01 — <title>
 
-## Description user story
-En tant que ..., je veux ..., afin de ...
+## User story description
+As a ..., I want ..., so that ...
 
-## Critères d'acceptation
+## Acceptance criteria
 - [ ] Given ..., when ..., then ...
 
-## Contexte
-<résumé exhaustif extrait de l'epic, architecture, project-context>
+## Context
+<exhaustive summary extracted from epic, architecture, project-context>
 
 ## Files to touch
-- CREATE: <path> — <raison>
-- UPDATE: <path> — <raison>
-- DELETE: <path> — <raison>
+- CREATE: <path> — <reason>
+- UPDATE: <path> — <reason>
+- DELETE: <path> — <reason>
 
-## Implementation plan (5-10 étapes)
+## Implementation plan (5-10 steps)
 1. ...
 
-## Tests à écrire / faire passer
-- Unit : ...
-- Integration : ...
-- E2E : ...
+## Tests to write / pass
+- Unit: ...
+- Integration: ...
+- E2E: ...
 
-## Dev notes (garde-fous)
-- Conventions à respecter : <refs project-context>
-- Pièges connus : <patterns du repo qui pourraient surprendre>
-- Pas dans le scope : <ce qu'on ne touche PAS>
+## Dev notes (guardrails)
+- Conventions to respect: <project-context refs>
+- Known traps: <repo patterns that could surprise>
+- Out of scope: <what we do NOT touch>
 
 ## Change log
-- <date> : story created
+- <date>: story created
 ```
 
 ### Step 6 — Update sprint-status
 - `backlog` → `ready-for-dev`
-- Pas de modification du `currentStory` (réservé à `/flow-dev`)
+- No change to `currentStory` (reserved for `/flow-dev`)
 
 ## Output
 
-- `.agents/implementation/stories/story-<id>.md` créé
-- `sprint-status.yaml` mis à jour
+- `.agents/implementation/stories/story-<id>.md` created
+- `sprint-status.yaml` updated
 
-## Suite
+## Next
 
-- `/flow-dev <id>` pour implémenter (lit le story file produit ici)
-- Si le contexte est encore flou, refaire `/flow-story <id>` après recueil d'infos
+- `/flow-dev <id>` to implement (reads the story file produced here)
+- If context still fuzzy, redo `/flow-story <id>` after gathering more info
 
-## Mode batch (`$FLOW_AUTO=1`)
+## Batch mode (`$FLOW_AUTO=1`)
 
-Quand cette env var est positionnée (orchestration par `flow-auto/run.sh`) :
-- Aucune question utilisateur. Aucun menu.
-- Si la story est déjà `ready-for-dev`, exit 0 sans rien faire.
-- Sinon, génère le story file et update sprint-status puis exit 0.
-- Toute halt condition (story introuvable, dépendance non satisfaite) → message d'erreur clair + exit non-zero pour faire échouer la phase côté run.sh.
+When this env var is set (orchestration by `flow-auto/run.sh`):
+- No user question. No menu.
+- If the story is already `ready-for-dev`, exit 0 silently without doing anything.
+- Otherwise, generate the story file and update sprint-status, then exit 0.
+- Any halt condition (story not found, dependency not satisfied) → clear error message + exit non-zero to fail the phase on the run.sh side.

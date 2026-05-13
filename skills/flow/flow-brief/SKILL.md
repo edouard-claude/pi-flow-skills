@@ -1,68 +1,66 @@
 ---
 name: flow-brief
-description: Product brief structuré par questions guidées (phase analysis). Synthèse
-  exécutive 1-2 pages du concept produit. À utiliser quand l'utilisateur a une idée
-  claire à formaliser, ou après /flow-brainstorm, ou dit 'fais-moi un brief', 'product
-  brief'.
+description: Product brief structured by guided questions (analysis phase). 1-2 page executive synthesis of the product concept.
+  Use when the user has a clear idea to formalize, or after /flow-brainstorm, or says 'give me a brief', 'product brief'.
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-brief — product brief exécutif
+# flow-brief — executive product brief
 
-Tu es facilitateur peer du PM. L'utilisateur est l'expert domaine ; toi tu structures, tu repères les trous, tu challenges sans imposer.
+You are a peer facilitator to the PM. The user is the domain expert; you structure, spot gaps, and challenge without imposing.
 
-## Quand l'utiliser
+## When to use
 
-- Idée mûre à formaliser (1-2 pages exécutives)
-- Après `flow-brainstorm` pour consolider la reco
-- Avant `flow-prd` — le brief est un input du PRD, pas un substitut
+- Mature idea to formalize (1-2 executive pages)
+- After `flow-brainstorm` to consolidate the recommendation
+- Before `flow-prd` — the brief is an input to the PRD, not a substitute
 
 ## Inputs
 
-- Si `.agents/planning/brainstorm-*.md` existe → lis d'abord, sers-toi des idées retenues
-- Optionnel : `.agents/planning/current-state.md` (brownfield)
-- L'utilisateur sait ce qu'il veut — tu extrais, tu ne réinventes pas
+- If `.agents/planning/brainstorm-*.md` exists → read first, leverage the retained ideas
+- Optional: `.agents/planning/current-state.md` (brownfield)
+- The user knows what they want — you extract, you don't reinvent
 
 ## Process — 4 stages
 
 ### Stage 1 — Understand intent (1 question)
-"Tu veux : (a) brief greenfield from scratch, (b) update d'un brief existant, (c) brief sur une idée parmi plusieurs ?"
+"Do you want: (a) greenfield brief from scratch, (b) update of an existing brief, (c) brief on one idea among several?"
 
 ### Stage 2 — Contextual discovery
-Scanne brainstorm/current-state si présents. Demande à l'utilisateur s'il a des docs externes ou benchmarks à charger.
+Scan brainstorm/current-state if present. Ask the user about external docs or benchmarks to load.
 
 ### Stage 3 — Guided elicitation
-Questions **par lots de 5 max**, attends réponses entre chaque lot :
+Questions **in batches of 5 max**, wait for answers between each batch:
 
-**Lot 1 — Problème** : Quel problème ? Pour qui ? À quelle fréquence vécu ? Comment est-il résolu aujourd'hui ? Quel coût/douleur ?
+**Batch 1 — Problem**: What problem? For whom? How often experienced? How is it solved today? What cost/pain?
 
-**Lot 2 — Users & value prop** : Utilisateurs cibles (primary/secondary) ? Value prop en 1 phrase ? Pourquoi maintenant ?
+**Batch 2 — Users & value prop**: Target users (primary/secondary)? Value prop in 1 sentence? Why now?
 
-**Lot 3 — Scope & contraintes** : Scope IN / scope OUT ? Contraintes (tech, business, time, budget) ? Dépendances ?
+**Batch 3 — Scope & constraints**: Scope IN / scope OUT? Constraints (tech, business, time, budget)? Dependencies?
 
-**Lot 4 — Succès** : Success metrics mesurables ? Non-goals (ce qu'on ne fera explicitement PAS) ?
+**Batch 4 — Success**: Measurable success metrics? Non-goals (what we explicitly will NOT do)?
 
-Pattern systématique après chaque réponse : **"anything else on this ?"** avant de passer au lot suivant.
+Systematic pattern after each answer: **"anything else on this?"** before moving to the next batch.
 
 ### Stage 4 — Draft & review
-Présente le draft. Demande validation explicite. Itère sur les sections à revoir.
+Present the draft. Ask for explicit validation. Iterate on sections that need rework.
 
 ## Output
 
-`.agents/planning/product-brief.md`, format :
-- **Executive Summary** (3-5 lignes max)
-- **Problème** (contexte, douleur, fréquence, status quo)
-- **Users** (primary, secondary, personas si pertinents)
-- **Value Proposition** (1 phrase)
+`.agents/planning/product-brief.md`, format:
+- **Executive Summary** (3-5 lines max)
+- **Problem** (context, pain, frequency, status quo)
+- **Users** (primary, secondary, personas if relevant)
+- **Value Proposition** (1 sentence)
 - **Scope** (IN / OUT)
-- **Contraintes**
-- **Success Metrics** (mesurables)
+- **Constraints**
+- **Success Metrics** (measurable)
 - **Non-goals**
 
-Court, factuel, zéro remplissage marketing.
+Short, factual, zero marketing filler.
 
-## Suite
+## Next
 
-Quand validé, propose `/flow-prd` pour passer en phase planning (le PRD détaille ce que le brief résume).
+Once validated, suggest `/flow-prd` to move into planning phase (the PRD details what the brief summarizes).

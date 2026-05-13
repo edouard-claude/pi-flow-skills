@@ -1,81 +1,79 @@
 ---
 name: flow-introspect
-description: 'Introspection d''un projet existant (brownfield) : documente l''état
-  réel + produit project-context.md LLM-optimisé pour nourrir les agents flow suivants.
-  À utiliser sur tout projet déjà implémenté avant /flow-prd ou /flow-architecture,
-  ou quand l''utilisateur dit ''documente le projet'', ''fais un état des lieux'',
-  ''introspect''.'
+description: 'Introspection of an existing project (brownfield): documents the actual state + produces an LLM-optimized project-context.md
+  to feed subsequent flow agents. Use on any already-implemented project before /flow-prd or /flow-architecture, or when the
+  user says ''document the project'', ''audit the state'', ''introspect''.'
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-introspect — état des lieux + project-context
+# flow-introspect — state audit + project-context
 
-Combine deux objectifs BMAD : **document-project** (état lisible humain) + **generate-project-context** (rules LLM-optimized).
+Combines two BMAD goals: **document-project** (human-readable state) + **generate-project-context** (LLM-optimized rules).
 
-## Quand l'utiliser
+## When to use
 
-- Brownfield AVANT toute autre phase flow
-- Refonte d'un projet existant
-- Reprise d'un projet par un nouvel agent / nouveau dev
+- Brownfield BEFORE any other flow phase
+- Rewriting an existing project
+- Picking up a project with a new agent / new developer
 
 ## Inputs
 
-- Le repo entier
-- Optionnel : briefing utilisateur sur les zones à creuser
+- The whole repo
+- Optional: user briefing on which areas to dig into
 
 ## Process
 
-### Phase 1 — Discovery (scan technique)
+### Phase 1 — Discovery (technical scan)
 
-Inspecte le repo :
-- **Stack** : package.json / go.mod / requirements.txt / Cargo.toml
-- **Structure** : dossiers racine, organisation modules
-- **Points d'entrée** : main, index, hooks, app.ts
-- **Conventions** : nommage, organisation, patterns récurrents
-- **Auth** : middleware, sessions, tokens, gestion permissions
-- **DB** : ORM, migrations, schémas, RLS
-- **Tests** : framework, organisation, coverage approximative
-- **Scripts** : npm scripts, Makefile, CI/CD
-- **Dépendances clés** : top 10 par criticité
-- **Migrations / data** : schéma, soft-deletes, multi-tenancy
+Inspect the repo:
+- **Stack**: package.json / go.mod / requirements.txt / Cargo.toml
+- **Structure**: root folders, module organization
+- **Entry points**: main, index, hooks, app.ts
+- **Conventions**: naming, organization, recurring patterns
+- **Auth**: middleware, sessions, tokens, permission handling
+- **DB**: ORM, migrations, schemas, RLS
+- **Tests**: framework, organization, approximate coverage
+- **Scripts**: npm scripts, Makefile, CI/CD
+- **Key dependencies**: top 10 by criticality
+- **Migrations / data**: schema, soft-deletes, multi-tenancy
 
-### Phase 2 — Analysis (interprétation)
+### Phase 2 — Analysis (interpretation)
 
-Repère :
-- **Dette technique** : TODOs, FIXMEs, code commenté, duplications visibles
-- **Décisions implicites** : conventions non documentées qu'il faut expliciter
-- **Risques** : workers concurrents, secrets en clair, RLS manquante, dépendances obsolètes
-- **Patterns à respecter** : structure de routes, gestion d'erreurs, format responses, etc.
+Spot:
+- **Tech debt**: TODOs, FIXMEs, commented-out code, visible duplication
+- **Implicit decisions**: undocumented conventions that need to be made explicit
+- **Risks**: concurrent workers, plaintext secrets, missing RLS, outdated dependencies
+- **Patterns to respect**: route structure, error handling, response format, etc.
 
-### Phase 3 — Synthesis (2 livrables)
+### Phase 3 — Synthesis (2 deliverables)
 
 #### `.agents/project-context.md` — LLM-optimized (~500-1500 tokens)
 
-Lean, focused sur le **non-obvious**. Sections courtes :
+Lean, focused on the **non-obvious**. Short sections:
 - Stack 1-liner
-- Structure (arborescence racine + commentaires)
-- Conventions cruciales (RLS, naming, error handling)
-- Patterns à respecter (format API responses, auth, etc.)
-- Commandes courantes (dev, test, db, etc.)
-- Pointeurs vers fichiers réels — **PAS** de copier-coller de code
+- Structure (root tree + commentary)
+- Critical conventions (RLS, naming, error handling)
+- Patterns to respect (API response format, auth, etc.)
+- Common commands (dev, test, db, etc.)
+- Pointers to real files — **NO** code copy-paste
 
-À charger par tout skill flow ultérieur (story, dev, architecture refonte).
+To be loaded by any subsequent flow skill (story, dev, architecture rewrite).
 
-#### `.agents/planning/current-state.md` — Humain (lisible)
+#### `.agents/planning/current-state.md` — Human (readable)
 
-- Architecture actuelle (texte ou diagramme ASCII)
-- Modules principaux + responsabilités
-- Workflows critiques (auth, paiement, etc.)
-- Dette technique identifiée (priorisée)
-- Décisions implicites à expliciter
-- Risques + recommandations
+- Current architecture (text or ASCII diagram)
+- Main modules + responsibilities
+- Critical workflows (auth, payment, etc.)
+- Identified tech debt (prioritized)
+- Implicit decisions to make explicit
+- Risks + recommendations
 
-## Suite
+## Next
 
-Selon le besoin :
-- Nouvelle feature → `/flow-prd`
-- Refacto majeur → `/flow-architecture`
-- Petite tâche → `/flow-quick` (peut lire project-context directement)
-- Doute → `/flow-help`
+Depending on need:
+- New feature → `/flow-prd`
+- Major refactor → `/flow-architecture`
+- Small task → `/flow-quick` (can read project-context directly)
+- Unsure → `/flow-help`

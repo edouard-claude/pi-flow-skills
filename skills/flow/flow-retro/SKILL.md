@@ -1,132 +1,131 @@
 ---
 name: flow-retro
-description: Retrospective de fin d'epic en party mode (dialogues multi-rôles), avec
-  critical readiness exploration et préparation de l'epic suivant. Capture les leçons,
-  met à jour project-context.md, génère action items. À utiliser quand toutes les
-  stories d'un epic sont done.
+description: End-of-epic retrospective in party mode (multi-role dialogues), with critical readiness exploration and preparation
+  for the next epic. Captures lessons, updates project-context.md, generates action items. Use when all stories of an epic
+  are done.
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-retro — retrospective + préparation epic suivant
+# flow-retro — retrospective + next-epic prep
 
-Tu animes en **party mode** : tous les échanges au format `Name (Role): dialogue`. L'utilisateur est participant actif, pas spectateur. Psychological safety est sacrée — focus sur les systèmes, pas les blâmes.
+You facilitate in **party mode**: all exchanges in `Name (Role): dialogue` format. The user is an active participant, not a spectator. Psychological safety is sacred — focus on systems, not blame.
 
-## Quand l'utiliser
+## When to use
 
-- Toutes stories d'un epic sont `done` dans sprint-status
-- L'utilisateur dit 'retro', 'bilan epic'
-- À la transition entre deux epics
+- All stories of an epic are `done` in sprint-status
+- User says 'retro', 'epic wrap-up'
+- At the transition between two epics
 
-## Inputs (deep dive requis)
+## Inputs (deep dive required)
 
 - `.agents/implementation/sprint-status.yaml`
 - `.agents/planning/epics/<epic-completed>.md`
-- `.agents/implementation/stories/story-<epic>-*.md` (toutes les stories de l'epic, **lire les Dev Notes**)
-- `.agents/implementation/retro-epic-<previous>.md` si présent (continuité)
+- `.agents/implementation/stories/story-<epic>-*.md` (all epic stories, **read Dev Notes**)
+- `.agents/implementation/retro-epic-<previous>.md` if present (continuity)
 - `.agents/planning/prd.md` + `.agents/planning/architecture.md`
-- `git log` depuis le début de l'epic
+- `git log` since the epic started
 
-## Process — 12 steps avec party mode
+## Process — 12 steps with party mode
 
 ### Step 1 — Epic discovery
-- Identifie l'epic terminé via sprint-status
-- Confirme avec l'utilisateur : "On retro epic-NNN <titre> ?"
+- Identify the completed epic via sprint-status
+- Confirm with the user: "Retro on epic-NNN <title>?"
 
 ### Step 2 — Deep story analysis
-Pour chaque story de l'epic :
-- Dev notes (challenges, décisions)
-- Review feedback (`[AI-Review]` items résolus)
-- Patterns récurrents
-- Dette technique identifiée
-- Tests : coverage, gaps
+For each story of the epic:
+- Dev notes (challenges, decisions)
+- Review feedback (`[AI-Review]` items resolved)
+- Recurring patterns
+- Identified tech debt
+- Tests: coverage, gaps
 
 ### Step 3 — Previous retro follow-through
-Si une retro précédente existe :
-- Quels action items ont été suivis ?
-- Lesquels sont restés ouverts ?
-- Pourquoi ?
+If a previous retro exists:
+- Which action items were followed up on?
+- Which stayed open?
+- Why?
 
 ### Step 4 — Next epic preview
-Si un epic suivant est défini :
-- Dépendances avec l'epic qui se termine
-- Gaps identifiés (manque archi, refs manquantes)
-- Prérequis à mettre en place
+If a next epic is defined:
+- Dependencies with the closing epic
+- Identified gaps (missing architecture, missing refs)
+- Prerequisites to put in place
 
 ### Step 5 — Initialize retro
-Init `.agents/implementation/retro-epic-<NNN>-<date>.md` avec contexte chargé.
+Init `.agents/implementation/retro-epic-<NNN>-<date>.md` with loaded context.
 
-### Step 6 — Discussion epic review (party mode)
+### Step 6 — Epic review discussion (party mode)
 
-Anime trois sections, **dialogues format `Name (Role): dialogue`** :
+Facilitate three sections, **dialogues in `Name (Role): dialogue` format**:
 
 #### What Went Well
 ```
-Alex (Tech Lead): On a livré les 8 stories sans déraper sur le scope. Le pattern auth de l'epic précédent a payé.
-You (PO): Effectivement, et la décision de checkpoint mid-epic a évité de re-faire X.
+Alex (Tech Lead): We delivered all 8 stories without scope creep. The auth pattern from the previous epic paid off.
+You (PO): Right, and the mid-epic checkpoint decision saved us from redoing X.
 ```
 
 #### Challenges
 ```
-Sam (Developer): La story-003 a sous-estimé la complexité du multi-tenancy. On a pris 3 jours au lieu d'1.
-Alex (Tech Lead): Vrai. Notre archi avait sous-spécifié les RLS policies.
+Sam (Developer): Story-003 underestimated multi-tenancy complexity. Took 3 days instead of 1.
+Alex (Tech Lead): True. Our architecture under-specified the RLS policies.
 ```
 
 #### Patterns
 ```
-Sam (Developer): J'ai vu 3 fois le même bout de logique répliqué entre stories. Candidat refacto.
-You (PO): On le tag pour l'epic suivant ?
+Sam (Developer): I saw the same logic replicated across 3 stories. Refactor candidate.
+You (PO): Tag it for the next epic?
 ```
 
-L'utilisateur intervient librement, peut prendre n'importe quel rôle ou parler en son nom.
+The user intervenes freely, can take any role or speak in their own name.
 
 ### Step 7 — Next epic preparation (interactive)
-Discussion ouverte, debate autorisé :
-- L'epic suivant est-il bien cadré ?
-- Risques anticipés ?
-- Ce qu'on emporte de l'epic actuel (patterns, dette à payer) ?
+Open discussion, debate allowed:
+- Is the next epic well framed?
+- Anticipated risks?
+- What do we carry over (patterns, debt to pay)?
 
 ### Step 8 — Synthesize action items
-Catégorise :
-- **Process** (changement de méthode pour epic suivant)
-- **Tech debt** (à payer dans epic suivant ou tagger)
-- **Documentation** (project-context à enrichir)
-- **Skills** (apprentissages à formaliser)
+Categorize:
+- **Process** (method change for next epic)
+- **Tech debt** (to pay in next epic or tag)
+- **Documentation** (project-context to enrich)
+- **Skills** (learnings to formalize)
 
 ### Step 9 — Critical readiness exploration
-Avant de passer à l'epic suivant, check 5 dimensions :
-- **Testing** : coverage suffisante ? Tests E2E en place ?
-- **Deployment** : prod-ready ? Rollback plan ?
-- **Stakeholder acceptance** : valid utilisateur final / client ?
-- **Tech health** : monitoring, alertes, perf metrics OK ?
-- **Blockers** : dépendances externes résolues ?
+Before moving to the next epic, check 5 dimensions:
+- **Testing**: sufficient coverage? E2E tests in place?
+- **Deployment**: prod-ready? Rollback plan?
+- **Stakeholder acceptance**: end user / client validation?
+- **Tech health**: monitoring, alerts, perf metrics OK?
+- **Blockers**: external dependencies resolved?
 
-Si un point n'est pas vert, propose une story de stabilisation avant l'epic suivant.
+If a point is not green, suggest a stabilization story before the next epic.
 
 ### Step 10 — Closure
-Célébration courte mais sincère. Reconnaissance des wins.
+Short but sincere celebration. Acknowledge wins.
 
 ### Step 11 — Save + update artifacts
-- `.agents/implementation/retro-epic-<NNN>-<date>.md` finalisé
-- **Update `.agents/project-context.md`** si patterns émergents (conventions à graver pour les agents suivants)
-- Update sprint-status : tag epic comme `retrospected`
+- `.agents/implementation/retro-epic-<NNN>-<date>.md` finalized
+- **Update `.agents/project-context.md`** if emerging patterns (conventions to lock in for subsequent agents)
+- Update sprint-status: tag the epic as `retrospected`
 
 ### Step 12 — Final summary + handoff
-Résumé en 5 lignes :
+5-line summary:
 - 2-3 wins
 - 2-3 challenges + actions
-- Reco pour la suite
+- Recommendation for what's next
 
 ## Output
 
 - `.agents/implementation/retro-epic-<NNN>-<date>.md`
-- `.agents/project-context.md` mis à jour si patterns identifiés
-- `sprint-status.yaml` taggé
+- `.agents/project-context.md` updated if patterns identified
+- `sprint-status.yaml` tagged
 
-## Suite
+## Next
 
-- Epic suivant prêt → `/flow-sprint` puis `/flow-story <next-id>`
-- Critical readiness rouge sur une dimension → `/flow-story` de stabilisation d'abord
-- Tous epics terminés → projet livré, ou `/flow-brief` pour la v2
-- Changement majeur révélé pendant la retro → `/flow-course-correct`
+- Next epic ready → `/flow-sprint` then `/flow-story <next-id>`
+- Critical readiness red on a dimension → `/flow-story` stabilization first
+- All epics done → project delivered, or `/flow-brief` for v2
+- Major change revealed during the retro → `/flow-course-correct`

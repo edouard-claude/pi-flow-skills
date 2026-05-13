@@ -1,113 +1,112 @@
 ---
 name: flow-architecture
-description: Décisions techniques à partir du PRD (phase solutioning). Conversation
-  collaborative step-by-step, document append-only avec menus de validation. Produit
-  architecture.md avec trade-offs explicites. À utiliser après /flow-prd validé, ou
-  pour refonte tech majeure.
+description: Technical decisions derived from the PRD (solutioning phase). Step-by-step collaborative conversation, append-only
+  document with validation menus. Produces architecture.md with explicit trade-offs. Use after /flow-prd is validated, or
+  for a major tech rewrite.
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-architecture — décisions techniques
+# flow-architecture — technical decisions
 
-Tu es architecte facilitateur peer, partenaire de discovery — pas dictateur. Les décisions structurantes sont prises **avec** l'utilisateur, avec trade-offs explicites. Pas de skip d'étape.
+You are a peer architect, a discovery partner — not a dictator. Structural decisions are made **with** the user, with explicit trade-offs. No step skipping.
 
-## Quand l'utiliser
+## When to use
 
-- Après `flow-prd` validé
-- Refonte technique majeure (en complément de `flow-introspect`)
+- After `flow-prd` is validated
+- Major technical rewrite (alongside `flow-introspect`)
 
-## Inputs (lire AVANT toute proposition)
+## Inputs (read BEFORE any proposal)
 
-- `.agents/planning/prd.md` (obligatoire)
-- `.agents/project-context.md` si brownfield (contraint les choix)
-- `.agents/planning/current-state.md` si brownfield (existant à respecter/migrer)
+- `.agents/planning/prd.md` (required)
+- `.agents/project-context.md` if brownfield (constrains choices)
+- `.agents/planning/current-state.md` if brownfield (existing system to respect/migrate)
 
-## Process — step-by-step avec gates
+## Process — step-by-step with gates
 
-### Step 1 — Init & cadrage
-- Lire PRD + brownfield context si présent
-- Identifier les zones de décision (stack, data, API, auth, intégrations, déploiement)
-- Init `.agents/planning/architecture.md` avec `stepsCompleted: []`
+### Step 1 — Init & framing
+- Read the PRD + brownfield context if present
+- Identify decision areas (stack, data, API, auth, integrations, deployment)
+- Init `.agents/planning/architecture.md` with `stepsCompleted: []`
 
 ### Step 2 — Stack
-Propose 2-3 options de stack avec trade-offs. Pour chaque option :
+Propose 2-3 stack options with trade-offs. For each option:
 - Pros / cons
-- Adéquation au PRD
-- Adéquation au project-context (brownfield)
-Demande choix utilisateur. Append décision retenue + alternatives écartées + raison.
+- Fit with the PRD
+- Fit with project-context (brownfield)
+Ask the user to choose. Append the retained decision + discarded alternatives + reason.
 
-**Menu : Continuer / Réviser / Pause.**
+**Menu: Continue / Revise / Pause.**
 
-### Step 3 — Schéma data
-- Entités principales + relations
-- Index critiques (perf)
-- Multi-tenancy / RLS si applicable
-- Soft-delete ou hard-delete
-- Stratégie migrations
+### Step 3 — Data schema
+- Main entities + relationships
+- Critical indexes (perf)
+- Multi-tenancy / RLS if applicable
+- Soft-delete or hard-delete
+- Migration strategy
 
 Append + menu.
 
-### Step 4 — Patterns API
-- REST / GraphQL / RPC (avec trade-off)
+### Step 4 — API patterns
+- REST / GraphQL / RPC (with trade-off)
 - Versioning, pagination, filtering
-- Format response standardisé (succès / erreur)
-- Codes d'erreur
+- Standardized response format (success / error)
+- Error codes
 
 Append + menu.
 
-### Step 5 — Auth & sécurité
-- Mécanisme auth (sessions, JWT, OAuth, hybride)
+### Step 5 — Auth & security
+- Auth mechanism (sessions, JWT, OAuth, hybrid)
 - Refresh tokens
 - RBAC / ABAC
-- Validation inputs
+- Input validation
 - Secrets management
 - CORS, CSRF, rate limiting
 
 Append + menu.
 
-### Step 6 — Intégrations externes
-- LLM, paiement, email, storage, etc.
-- Adapters + interfaces (testabilité)
+### Step 6 — External integrations
+- LLM, payment, email, storage, etc.
+- Adapters + interfaces (testability)
 - Failure modes + retries + timeouts
 
 Append + menu.
 
-### Step 7 — Déploiement & ops
-- Cible (cloud, on-prem, containers)
+### Step 7 — Deployment & ops
+- Target (cloud, on-prem, containers)
 - CI/CD
 - Monitoring, logging, alerting
 - Backups, DR
 
 Append + menu.
 
-### Step 8 — Risques techniques
-- Liste des risques identifiés (perf, scaling, dépendances, dette)
-- Mitigations envisagées
+### Step 8 — Technical risks
+- List of identified risks (perf, scaling, dependencies, debt)
+- Planned mitigations
 
 Append + menu.
 
 ### Step 9 — Finalize
-- Relecture globale
-- Vérification cohérence PRD ↔ architecture
-- Validation explicite
+- Global proofread
+- PRD ↔ architecture coherence check
+- Explicit validation
 
-## Format des décisions
+## Decision format
 
-Chaque décision = bloc structuré :
+Each decision = structured block:
 ```
-### Décision : <titre court>
-- **Retenu** : <option>
-- **Alternatives écartées** : <option A, option B>
-- **Raison** : <1-2 phrases>
-- **Impact** : <composants touchés>
+### Decision: <short title>
+- **Retained**: <option>
+- **Discarded alternatives**: <option A, option B>
+- **Reason**: <1-2 sentences>
+- **Impact**: <affected components>
 ```
 
 ## Output
 
-`.agents/planning/architecture.md` avec frontmatter tracking + sections : Stack, Data, API, Auth, Intégrations, Déploiement, Risques.
+`.agents/planning/architecture.md` with tracking frontmatter + sections: Stack, Data, API, Auth, Integrations, Deployment, Risks.
 
-## Suite
+## Next
 
-Validation explicite avant `/flow-epics`. Si brownfield avec refacto, signale dans le doc les composants existants à migrer/déprécier.
+Explicit validation before `/flow-epics`. If brownfield with refactor, flag in the document the existing components to migrate/deprecate.

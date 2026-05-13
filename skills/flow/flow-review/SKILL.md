@@ -1,69 +1,71 @@
 ---
 name: flow-review
-description: "Phase REVIEW d'une story : adversarial parallel avec 3 reviewers (Blind Hunter, Edge Case Hunter, Acceptance Auditor), triage des findings en Blockers/Should-fix/Nice-to-have/Noise, action items [AI-Review] ajoutés au story file si retravail. Update sprint-status review → done OU review → in-progress. À utiliser après /flow-dev."
+description: 'REVIEW phase of a story: parallel adversarial review with 3 reviewers (Blind Hunter, Edge Case Hunter, Acceptance
+  Auditor), triage of findings into Blockers/Should-fix/Nice-to-have/Noise, [AI-Review] action items added to the story file
+  when rework is needed. Keeps sprint-status review (approved) OR sends back to in-progress. Use after /flow-dev.'
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-review — adversarial parallel
+# flow-review — parallel adversarial review
 
-Tu joues trois reviewers en parallèle dans ta tête, puis tu synthétises. Pas de complaisance avec ton propre code de tout à l'heure — tu lis le diff comme si tu le découvrais.
+You play three reviewers in parallel in your head, then synthesize. No complacency about your own code from earlier — read the diff as if discovering it fresh.
 
-## Quand l'utiliser
+## When to use
 
-- Story `review` dans sprint-status après `/flow-dev`
-- Avant `/flow-commit`
+- Story `review` in sprint-status after `/flow-dev`
+- Before `/flow-commit`
 
-## Inputs (obligatoires)
+## Inputs (required)
 
-- `.agents/implementation/stories/story-<id>.md` (avec File List + Dev Notes)
-- Le diff git récent (`git diff` sur les fichiers de la File List)
+- `.agents/implementation/stories/story-<id>.md` (with File List + Dev Notes)
+- Recent git diff (`git diff` on the files from the File List)
 - `.agents/project-context.md`
-- `.agents/planning/architecture.md` pour vérification compliance
+- `.agents/planning/architecture.md` for compliance check
 
 ## Process
 
-### Step 1 — Charge le contexte
-- Lis le story file complet (AC, Implementation Plan, Dev Notes)
-- Lis le diff des fichiers touchés
-- Lis les tests ajoutés/modifiés
+### Step 1 — Load context
+- Read the full story file (AC, Implementation Plan, Dev Notes)
+- Read the diff of the touched files
+- Read the added/modified tests
 
-### Step 2 — Trois angles de review en parallèle
+### Step 2 — Three review angles in parallel
 
 #### Blind Hunter
-Lit le diff sans relire le story file. Cherche bugs, comportements suspects, code smells, mauvais nommage. Posture : "je n'ai aucun contexte, je vois quoi ?"
+Reads the diff without re-reading the story file. Hunts bugs, suspicious behavior, code smells, bad naming. Stance: "I have no context, what do I see?"
 
 #### Edge Case Hunter
-Énumère systématiquement les edge cases :
-- Inputs vides / null / undefined / negative / overflow
-- Concurrence (workers, transactions, races)
-- Erreurs réseau, timeouts, partial failures
+Systematically enumerates edge cases:
+- Empty / null / undefined / negative / overflow inputs
+- Concurrency (workers, transactions, races)
+- Network errors, timeouts, partial failures
 - Permissions / RLS / multi-tenancy
-- Migration de données (anciens enregistrements)
+- Data migration (legacy records)
 
-Pour chaque edge case : est-il couvert ? testé ?
+For each edge case: is it covered? tested?
 
 #### Acceptance Auditor
-Pour chaque AC du story file, vérifie qu'elle est **réellement** satisfaite par le code (pas juste un test qui passe par hasard). Pose la question : "si je dois démontrer ça à un PM, le code fait-il ce qui est promis ?"
+For each AC of the story file, verify it is **actually** satisfied by the code (not just a test that passes by coincidence). Ask: "if I had to demo this to a PM, does the code do what it promises?"
 
 ### Step 3 — Triage findings
 
-Classe **chaque** finding :
-- **Blockers** : must-fix avant `done`
-- **Should-fix** : à corriger sauf justification écrite
-- **Nice-to-have** : tag debt log, pas bloquant
-- **Noise** : à ignorer (faux positif, hors scope story)
+Classify **each** finding:
+- **Blockers**: must-fix before `done`
+- **Should-fix**: must fix unless written justification
+- **Nice-to-have**: tag debt log, non-blocking
+- **Noise**: ignore (false positive, out of story scope)
 
 ### Step 4 — Action items
 
-#### Si **blockers ou should-fix** présents
-Ajoute en bas du story file une section :
+#### If **blockers or should-fix** present
+Append a section at the bottom of the story file:
 ```markdown
 ## [AI-Review] Action items — <date>
 
 ### Blockers
-- [ ] <description précise + fichier:ligne si pertinent>
+- [ ] <precise description + file:line if relevant>
 
 ### Should-fix
 - [ ] <description>
@@ -72,29 +74,29 @@ Ajoute en bas du story file une section :
 - [ ] <description>
 ```
 
-Update sprint-status : `review` → `in-progress` (retour `/flow-dev` pour traiter les items).
+Update sprint-status: `review` → `in-progress` (back to `/flow-dev` to handle the items).
 
-#### Si **clean** (uniquement nice-to-have éventuels)
-Ajoute une section **Senior Review** au story file :
+#### If **clean** (only optional nice-to-have)
+Append a **Senior Review** section to the story file:
 ```markdown
 ## Senior Review — <date>
 
-- Blind Hunter : <synthèse — RAS ou notes>
-- Edge Case Hunter : <synthèse>
-- Acceptance Auditor : <synthèse>
+- Blind Hunter: <synthesis — clear or notes>
+- Edge Case Hunter: <synthesis>
+- Acceptance Auditor: <synthesis>
 
-**Verdict** : approved.
+**Verdict**: approved.
 ```
 
-Update sprint-status : `review` → reste `review` (en attente de `/flow-commit`).
+Update sprint-status: keep `review` (waiting for `/flow-commit`).
 
 ## Output
 
-- Story file enrichi (Action items OU Senior Review)
-- sprint-status mis à jour selon verdict
+- Enriched story file (Action items OR Senior Review)
+- sprint-status updated per verdict
 
-## Suite
+## Next
 
 - Verdict **clean** → `/flow-commit <id>`
-- Items à traiter → `/flow-dev <id>` (cycle dev/review jusqu'à clean)
-- Blocker majeur identifié → `/flow-course-correct`
+- Items to handle → `/flow-dev <id>` (dev/review cycle until clean)
+- Major blocker identified → `/flow-course-correct`

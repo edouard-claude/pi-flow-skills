@@ -1,91 +1,90 @@
 ---
 name: flow-prd
-description: Création d'un PRD (Product Requirements Document) en step-by-step discipline,
-  source de vérité pour le scope. Phase planning. À utiliser après /flow-brief ou
-  /flow-introspect, quand l'utilisateur veut formaliser les requirements avant la
-  tech, ou dit 'fais un PRD'.
+description: Creation of a PRD (Product Requirements Document) with step-by-step discipline, single source of truth for scope.
+  Planning phase. Use after /flow-brief or /flow-introspect, when the user wants to formalize requirements before tech, or
+  says 'write a PRD'.
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-prd — PRD source de vérité
+# flow-prd — PRD single source of truth
 
-Tu es PM facilitateur peer. Tu produis un document **append-only** par étapes, avec menu de validation à chaque step. Pas de skip. L'utilisateur valide chaque section avant la suivante.
+You are a peer PM facilitator. You produce an **append-only** document step by step, with a validation menu at each step. No skipping. The user validates each section before the next.
 
-## Quand l'utiliser
+## When to use
 
-- Après `flow-brief` (greenfield) ou `flow-introspect` (brownfield)
-- Avant `flow-architecture` — le PRD nourrit l'architecture
+- After `flow-brief` (greenfield) or `flow-introspect` (brownfield)
+- Before `flow-architecture` — the PRD feeds the architecture
 
-## Inputs (à lire AVANT de poser des questions)
+## Inputs (read BEFORE asking questions)
 
-- `.agents/planning/product-brief.md` si présent (greenfield)
-- `.agents/planning/current-state.md` si présent (brownfield)
-- `.agents/project-context.md` si présent (contraintes techniques)
-- PRD existant si update mode
+- `.agents/planning/product-brief.md` if present (greenfield)
+- `.agents/planning/current-state.md` if present (brownfield)
+- `.agents/project-context.md` if present (technical constraints)
+- Existing PRD if update mode
 
-## Process — discipline step-by-step
+## Process — step-by-step discipline
 
 ### Step 1 — Mode & init
-"Tu veux : (a) PRD from scratch, (b) update d'un PRD existant ?" → init du fichier `.agents/planning/prd.md` avec frontmatter `stepsCompleted: []`.
+"Do you want: (a) PRD from scratch, (b) update of an existing PRD?" → init `.agents/planning/prd.md` with `stepsCompleted: []` frontmatter.
 
-### Step 2 — Executive summary & problème
-Questions par lot de 5 max :
-- Problème détaillé (au-delà du brief)
-- Contexte business / contraintes externes
-- Pourquoi maintenant
-- Status quo et coût de l'inaction
+### Step 2 — Executive summary & problem
+Questions in batches of 5 max:
+- Detailed problem (beyond the brief)
+- Business context / external constraints
+- Why now
+- Status quo and cost of inaction
 
-**Append au PRD, mets à jour `stepsCompleted`, présente menu** :
+**Append to the PRD, update `stepsCompleted`, present menu**:
 ```
-1. Continuer (Step 3 — Users & user stories)
-2. Réviser la section actuelle
+1. Continue (Step 3 — Users & user stories)
+2. Revise the current section
 3. Pause
 ```
 
 ### Step 3 — Users & user stories
 - Personas (primary, secondary)
-- User stories prioritaires (format "As a X, I want Y, so that Z")
-- Parcours utilisateur si pertinent
+- Priority user stories (format "As a X, I want Y, so that Z")
+- User journey if relevant
 
-**Append → menu de validation.**
+**Append → validation menu.**
 
 ### Step 4 — Success metrics
-- KPI mesurables (north star + supporting)
-- Définition de "succès" pour la v1
-- Métriques business + métriques produit
+- Measurable KPIs (north star + supporting)
+- Definition of "success" for v1
+- Business metrics + product metrics
 
-**Append → menu de validation.**
+**Append → validation menu.**
 
 ### Step 5 — Scope
-- Scope IN (features v1)
-- Scope OUT (explicite — ce qu'on ne fera PAS)
-- Phasing si plusieurs releases prévues
+- Scope IN (v1 features)
+- Scope OUT (explicit — what we will NOT do)
+- Phasing if multiple releases planned
 
-**Append → menu de validation.**
+**Append → validation menu.**
 
-### Step 6 — Contraintes & dépendances
-- Contraintes techniques (perf, sécurité, intégrations)
-- Contraintes business (budget, time, conformité)
-- Dépendances externes (API tierces, équipes, livrables amont)
+### Step 6 — Constraints & dependencies
+- Technical constraints (perf, security, integrations)
+- Business constraints (budget, time, compliance)
+- External dependencies (third-party APIs, teams, upstream deliverables)
 
-**Append → menu de validation.**
+**Append → validation menu.**
 
-### Step 7 — Non-goals & risques
-- Non-goals (zones explicitement hors scope)
-- Risques identifiés + mitigations envisagées
+### Step 7 — Non-goals & risks
+- Non-goals (areas explicitly out of scope)
+- Identified risks + planned mitigations
 
-**Append → menu de validation.**
+**Append → validation menu.**
 
 ### Step 8 — Finalize
-- Relecture globale
-- Demande validation explicite : "Le PRD est-il prêt pour `flow-architecture` ?"
-- Propose distillate LLM-optimized (1 page) en option
+- Global proofread
+- Ask for explicit validation: "Is the PRD ready for `flow-architecture`?"
+- Optionally offer an LLM-optimized distillate (1 page)
 
 ## Output
 
-`.agents/planning/prd.md` avec frontmatter de tracking :
+`.agents/planning/prd.md` with tracking frontmatter:
 ```yaml
 ---
 status: draft | ready
@@ -94,8 +93,8 @@ lastUpdated: 2026-MM-DD
 ---
 ```
 
-Sections : Executive Summary, Problème, Users + Stories, Success Metrics, Scope, Contraintes, Non-goals, Risques.
+Sections: Executive Summary, Problem, Users + Stories, Success Metrics, Scope, Constraints, Non-goals, Risks.
 
-## Suite
+## Next
 
-Validation explicite obligatoire avant `/flow-architecture`. Si update mode, propose aussi `/flow-course-correct` si impact sur sprint en cours.
+Explicit validation required before `/flow-architecture`. If update mode, also suggest `/flow-course-correct` if it impacts an in-progress sprint.

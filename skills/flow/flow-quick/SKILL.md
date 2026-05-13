@@ -1,88 +1,87 @@
 ---
 name: flow-quick
-description: 'Bypass du pipeline complet flow : intent utilisateur → code livré →
-  review, en une boucle. Pour fixes, petites features, ajustements (single user-facing
-  goal). À utiliser pour toute tâche < 1 jour de dev, ou quand l''utilisateur dit
-  ''fix rapide'', ''petit changement''.'
+description: 'Bypass of the full flow pipeline: user intent -> delivered code -> review, in one loop. For fixes, small features,
+  adjustments (single user-facing goal). Use for any task under one day of dev, or when the user says ''quick fix'', ''small
+  change''.'
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-quick — intent vers code en boucle courte
+# flow-quick — intent to code in a short loop
 
-Sweet spot : tâche cadrable en 900-1600 tokens d'intent, single user-facing goal. Pas de PRD, pas d'architecture, pas de story file — juste code propre + commit.
+Sweet spot: task scopable in 900-1600 tokens of intent, single user-facing goal. No PRD, no architecture, no story file — just clean code + commit.
 
-## Quand l'utiliser
+## When to use
 
-- Bug fix circonscrit (1 cause racine identifiable)
-- Petite feature (< 1 jour de dev)
-- Refacto local (1-2 fichiers)
-- Ajustement config / env
-- Wiring d'un endpoint existant
+- Circumscribed bug fix (1 identifiable root cause)
+- Small feature (< 1 dev day)
+- Local refactor (1-2 files)
+- Config / env adjustment
+- Wiring up an existing endpoint
 
-**PAS pour** : nouvelle feature majeure, refonte, intégration externe nouvelle, change scope structurel → utiliser le pipeline (`flow-prd` ou `flow-story`).
+**NOT for**: new major feature, refactor, new external integration, structural scope change → use the pipeline (`flow-prd` or `flow-story`).
 
 ## Process — step-by-step
 
 ### Step 1 — Clarify & route (scope gate)
 
-1. **Lis** `.agents/project-context.md` si présent (conventions à respecter)
-2. **Évalue** l'intent : single goal ? sinon, redirige
-3. **Pose 2-3 questions max** si ambigu :
-   - Comportement attendu précis ?
-   - Edge cases qui comptent ?
-   - Composants à toucher ou laisser intacts ?
-4. **Scope check** : si la conversation révèle un scope > 1 jour ou multi-features, **STOP** et propose `/flow-prd` ou `/flow-story`.
+1. **Read** `.agents/project-context.md` if present (conventions to respect)
+2. **Evaluate** the intent: single goal? if not, redirect
+3. **Ask 2-3 questions max** if ambiguous:
+   - Precise expected behavior?
+   - Edge cases that matter?
+   - Components to touch or leave untouched?
+4. **Scope check**: if the conversation reveals a scope > 1 day or multi-feature, **STOP** and suggest `/flow-prd` or `/flow-story`.
 
-### Step 2 — Plan (5 lignes max)
+### Step 2 — Plan (5 lines max)
 
-Plan rapide en 5 lignes :
-- Cause racine (si fix)
-- Fichiers à toucher
-- Approche (1 phrase)
-- Tests à ajouter/modifier
-- Risques (1 phrase)
+Quick plan in 5 lines:
+- Root cause (if fix)
+- Files to touch
+- Approach (1 sentence)
+- Tests to add/modify
+- Risks (1 sentence)
 
-Présente, attends OK rapide ou ajustement.
+Present, wait for quick OK or adjustment.
 
 ### Step 3 — Implement
 
-- Respecte strictement les conventions du repo (project-context)
-- Pas de refacto opportuniste hors scope
-- Garde le diff minimal
-- Lance les tests existants après modif
+- Strictly follow the repo conventions (project-context)
+- No opportunistic refactor outside scope
+- Keep the diff minimal
+- Run existing tests after changes
 
 ### Step 4 — Self-review
 
-- Bugs / edge cases couverts ?
-- Conventions respectées ?
-- Pas de TODO / code commenté laissé ?
-- Tests passent ?
+- Bugs / edge cases covered?
+- Conventions respected?
+- No TODO / commented-out code left?
+- Tests pass?
 
 ### Step 5 — Commit draft
 
-Propose un message **conventional commits** :
+Propose a **conventional commits** message:
 ```
-type(scope): description courte
+type(scope): short description
 
-[corps optionnel : raison du changement, pas le quoi]
+[optional body: reason for the change, not the what]
 ```
 
 ## Output
 
-Pas de fichier dans `.agents/`. Juste :
-- Le code modifié
-- Les tests
-- Un draft de commit message
+No file in `.agents/`. Just:
+- The modified code
+- The tests
+- A commit message draft
 
 ## Halt conditions
 
-Si en cours de route :
-- Tu découvres que c'est un bug plus profond → stop, propose `/flow-story` ou `/flow-introspect`
-- L'intent change → stop, demande clarification
-- Tests existants cassent et c'est non-trivial → stop, escalade
+If mid-way:
+- You discover a deeper bug → stop, suggest `/flow-story` or `/flow-introspect`
+- The intent changes → stop, ask for clarification
+- Existing tests break and it's non-trivial → stop, escalate
 
-## Suite
+## Next
 
-Aucune. Si la tâche s'avère plus grosse en cours, stop et propose `/flow-prd` (si nouvelle feature) ou `/flow-story` (si dans un sprint).
+None. If the task turns out to be bigger mid-run, stop and suggest `/flow-prd` (if new feature) or `/flow-story` (if inside a sprint).

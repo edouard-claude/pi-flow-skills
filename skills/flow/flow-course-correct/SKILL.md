@@ -1,9 +1,8 @@
 ---
 name: flow-course-correct
-description: 'Navigation de changement majeur en milieu de sprint : pivot, nouvelle
-  contrainte, blocage. Analyse l''impact systématique sur PRD/architecture/epics/sprint,
-  classe par scope (Minor/Moderate/Major), génère un Sprint Change Proposal avec edit
-  proposals concrets. À utiliser dès qu''un changement risque d''invalider le plan.'
+description: 'Mid-sprint course correction for a major change: pivot, new constraint, blocker. Systematically analyzes impact
+  on PRD/architecture/epics/sprint, classifies by scope (Minor/Moderate/Major), generates a Sprint Change Proposal with concrete
+  edit proposals. Use as soon as a change risks invalidating the plan.'
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
@@ -11,14 +10,14 @@ url: https://github.com/edouard-claude
 
 # flow-course-correct — change management
 
-Tu es developer responsable de la navigation du changement. Approche méthodique : trigger → impact analysis → proposal → handoff. Tu ne modifies aucun artefact tant que l'utilisateur n'a pas tranché.
+You are a developer responsible for navigating change. Methodical approach: trigger → impact analysis → proposal → handoff. You don't modify any artifact until the user has decided.
 
-## Quand l'utiliser
+## When to use
 
-- Pivot scope mid-sprint
-- Nouvelle contrainte (techno, business, conformité, deadline)
-- Blocage qui invalide une story en cours ou à venir
-- Demande externe (client, équipe) qui change la donne
+- Mid-sprint scope pivot
+- New constraint (tech, business, compliance, deadline)
+- Blocker that invalidates a story in progress or upcoming
+- External request (client, team) that changes the picture
 
 ## Inputs
 
@@ -26,99 +25,99 @@ Tu es developer responsable de la navigation du changement. Approche méthodique
 - `.agents/planning/architecture.md`
 - `.agents/planning/epics/*.md`
 - `.agents/implementation/sprint-status.yaml`
-- `.agents/project-context.md` (si brownfield)
-- **Le changement signalé par l'utilisateur** (le trigger)
+- `.agents/project-context.md` (if brownfield)
+- **The user's reported change** (the trigger)
 
 ## Process — change management checklist
 
 ### Step 1 — Capture trigger
-Demande à l'utilisateur :
-- Nature du changement (1 phrase)
-- Origine (technique, business, externe)
-- Urgence (bloquant immédiat, prochaine itération, futur lointain)
-- Découvert quand / comment
+Ask the user:
+- Nature of the change (1 sentence)
+- Origin (technical, business, external)
+- Urgency (immediate blocker, next iteration, distant future)
+- Discovered when / how
 
-### Step 2 — Mode de travail
-"Tu veux : (a) **Incremental** — on examine chaque artefact un par un, (b) **Batch** — j'analyse tout, je présente un seul proposal global ?"
+### Step 2 — Work mode
+"Do you want: (a) **Incremental** — examine each artifact one by one, (b) **Batch** — I analyze everything, present a single global proposal?"
 
-### Step 3 — Impact analysis systématique
+### Step 3 — Systematic impact analysis
 
-Pour chaque artefact, évalue **impact = none / minor / moderate / major** :
+For each artifact, evaluate **impact = none / minor / moderate / major**:
 
-| Artefact | Impact | Sections touchées | Justification |
+| Artifact | Impact | Affected sections | Justification |
 |----------|--------|-------------------|---------------|
 | PRD | ? | ? | ? |
 | Architecture | ? | ? | ? |
-| Epics | ? | ? (lesquels) | ? |
-| Stories (sprint-status) | ? | ? (lesquelles) | ? |
+| Epics | ? | ? (which ones) | ? |
+| Stories (sprint-status) | ? | ? (which ones) | ? |
 | Project-context | ? | ? | ? |
 
 ### Step 4 — Scope classification
 
-| Scope | Critère | Handoff |
-|-------|---------|---------|
-| **Minor** | 1-2 stories ajustées, pas de change PRD/architecture | Direct `/flow-story` ou `/flow-quick` |
-| **Moderate** | Plusieurs stories impactées, sections PRD/archi à reviser | `/flow-prd` ou `/flow-epics` puis `/flow-sprint` |
-| **Major** | PRD invalidé, refonte archi, scope change majeur | `/flow-brief` ou `/flow-prd` from scratch |
+| Scope | Criterion | Handoff |
+|-------|-----------|---------|
+| **Minor** | 1-2 stories adjusted, no PRD/architecture change | Direct `/flow-story` or `/flow-quick` |
+| **Moderate** | Several stories impacted, PRD/architecture sections to revise | `/flow-prd` or `/flow-epics` then `/flow-sprint` |
+| **Major** | PRD invalidated, architecture rewrite, major scope change | `/flow-brief` or `/flow-prd` from scratch |
 
-### Step 5 — Edit proposals (format old → new)
+### Step 5 — Edit proposals (old → new format)
 
-Pour chaque artefact impacté, propose des modifications **concrètes** :
+For each impacted artifact, propose **concrete** modifications:
 
 ```
-**Artefact** : .agents/planning/prd.md
-**Section** : Scope > IN
+**Artifact**: .agents/planning/prd.md
+**Section**: Scope > IN
 **Old**:
-> - Feature X livrée en v1
+> - Feature X delivered in v1
 **New**:
-> - Feature X reportée en v2 (décision course-correct <date>)
-**Raison** : <changement signalé>
+> - Feature X deferred to v2 (course-correct decision <date>)
+**Reason**: <reported change>
 ```
 
 ### Step 6 — Sprint Change Proposal
 
-Génère `.agents/implementation/sprint-change-proposal-<date>.md` :
+Generate `.agents/implementation/sprint-change-proposal-<date>.md`:
 
 ```markdown
 ---
 date: <date>
-trigger: <résumé>
+trigger: <summary>
 scope: minor | moderate | major
 ---
 
 # Sprint Change Proposal — <date>
 
 ## Issue Summary
-<1-2 paragraphes>
+<1-2 paragraphs>
 
 ## Impact Analysis
-<tableau des artefacts impactés>
+<impacted artifacts table>
 
 ## Recommended Approach
-<reco argumentée en 5-10 lignes>
+<reasoned recommendation, 5-10 lines>
 
 ## Detailed Changes
-<liste des edit proposals old → new>
+<list of old → new edit proposals>
 
 ## Implementation Handoff
-- Skill suivant : `/flow-<nom>`
-- Stories impactées dans sprint-status : <ids>
-- Validations utilisateur nécessaires : <liste>
+- Next skill: `/flow-<name>`
+- Stories impacted in sprint-status: <ids>
+- Required user validations: <list>
 ```
 
-### Step 7 — Validation utilisateur
-Présente le proposal. Demande validation explicite avant toute modification.
+### Step 7 — User validation
+Present the proposal. Ask for explicit validation before any modification.
 
 ## Output
 
-- `.agents/implementation/sprint-change-proposal-<date>.md` (créé)
-- **Aucune autre modification** tant que l'utilisateur ne valide pas
+- `.agents/implementation/sprint-change-proposal-<date>.md` (created)
+- **No other modification** until the user validates
 
-## Suite
+## Next
 
-Selon scope :
-- Minor → `/flow-story` ou `/flow-quick`
-- Moderate → `/flow-epics` puis `/flow-sprint`
-- Major → `/flow-prd` (et probablement `/flow-architecture`)
+Depending on scope:
+- Minor → `/flow-story` or `/flow-quick`
+- Moderate → `/flow-epics` then `/flow-sprint`
+- Major → `/flow-prd` (and likely `/flow-architecture`)
 
-Puis update `sprint-status.yaml` avec les nouveaux statuses (stories obsolètes → `cancelled` ou retirées).
+Then update `sprint-status.yaml` with the new statuses (obsolete stories → `cancelled` or removed).

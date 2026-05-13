@@ -1,6 +1,9 @@
 ---
 name: flow-help
-description: Point d'entrée du workflow flow. Affiche un dashboard sprint complet (tous epics, toutes stories, statuses) puis recommande la prochaine étape parmi flow-brainstorm, flow-brief, flow-introspect, flow-prd, flow-architecture, flow-epics, flow-sprint, flow-story, flow-dev, flow-review, flow-commit, flow-quick, flow-course-correct, flow-retro, flow-auto. À utiliser pour faire le point, savoir où on en est, ou en début de session.
+description: Entry point of the flow workflow. Displays a complete sprint dashboard (all epics, all stories, statuses) then
+  recommends the next step among flow-brainstorm, flow-brief, flow-introspect, flow-prd, flow-architecture, flow-epics, flow-sprint,
+  flow-story, flow-dev, flow-review, flow-commit, flow-quick, flow-course-correct, flow-retro, flow-auto. Use to take stock,
+  find out where you stand, or at the start of a session.
 version: 0.1.2
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
@@ -8,81 +11,81 @@ url: https://github.com/edouard-claude
 
 # flow-help — dashboard + orientation
 
-Tu es facilitateur peer, pas un menu. Affiche d'abord la vue d'ensemble du sprint, puis raisonne sur les dépendances et propose UNE seule prochaine étape.
+You are a peer facilitator, not a menu. First show the sprint overview, then reason about dependencies and propose ONE single next step.
 
-## Quand l'utiliser
+## When to use
 
-- Début de session sur un projet flow-driven
-- Utilisateur perdu : 'où on en est ?', 'qu'est-ce que je fais maintenant ?'
-- Après chaque skill flow, pour décider de la suite
-- À tout moment pour avoir l'état du sprint
+- Start of a session on a flow-driven project
+- User lost: 'where are we?', 'what do I do next?'
+- After each flow skill, to decide what comes next
+- Anytime to get the sprint state
 
 ## Inputs
 
-- `.agents/implementation/sprint-status.yaml` (si présent)
-- `.agents/planning/epics/*.md` (titres, structure)
-- `.agents/` (toute l'arborescence pour détecter la phase)
-- `git log -10` (activité récente)
+- `.agents/implementation/sprint-status.yaml` (if present)
+- `.agents/planning/epics/*.md` (titles, structure)
+- `.agents/` (whole tree to detect the phase)
+- `git log -10` (recent activity)
 
 ## Process
 
-### Step 1 — Sprint dashboard (TOUJOURS en premier, si sprint-status.yaml existe)
+### Step 1 — Sprint dashboard (ALWAYS first, if sprint-status.yaml exists)
 
-Lis `.agents/implementation/sprint-status.yaml`. Affiche TOUTES les stories groupées par epic dans l'ordre numérique, avec leur status. **Format strict** :
+Read `.agents/implementation/sprint-status.yaml`. Display ALL stories grouped by epic in numeric order, with their status. **Strict format**:
 
 ```
-Epic N (<status-epic>)
-  <symbole> <id-slug>                 <status>
-  <symbole> <id-slug>                 <status>
+Epic N (<epic-status>)
+  <symbol> <id-slug>                 <status>
+  <symbol> <id-slug>                 <status>
   ...
 ```
 
-**Symboles status** :
+**Status symbols**:
 - `✓` done
-- `▶` in-progress / review (en cours)
-- `◆` ready-for-dev (prête à attaquer)
-- `○` backlog (pas commencée)
+- `▶` in-progress / review (running)
+- `◆` ready-for-dev (ready to pick up)
+- `○` backlog (not started)
 - `✗` blocked / cancelled
 
-**Status agrégé de l'epic** (à mettre entre parenthèses après "Epic N") :
-- `done` — toutes les stories de l'epic sont done
-- `in-progress` — au moins une story est in-progress, review, ou ready-for-dev
-- `backlog` — aucune story n'est encore en cours, mais certaines sont done
-- `not-started` — toutes les stories sont en backlog
+**Aggregated epic status** (in parentheses after "Epic N"):
+- `done` — all stories of the epic are done
+- `in-progress` — at least one story is in-progress, review, or ready-for-dev
+- `backlog` — no story started yet, but some are done
+- `not-started` — all stories are backlog
 
-**Alignement** : padding constant sur les ids de story pour que les colonnes status soient alignées. Calcule la largeur max de id-slug + 2 espaces.
+**Alignment**: constant padding on story ids so status columns align. Compute max id-slug width + 2 spaces.
 
-**Si pas de sprint-status.yaml** : saute ce step, indique simplement la phase courante.
+**If no sprint-status.yaml**: skip this step, just state the current phase.
 
-### Step 2 — Détection de la phase
+### Step 2 — Phase detection
 
-Détermine la phase via les artefacts présents :
-- Aucun `.agents/` + code existant → brownfield, recommande `/flow-introspect`
-- Aucun `.agents/` + repo vide → greenfield, recommande `/flow-brainstorm` ou `/flow-brief`
-- `product-brief.md` présent, pas de `prd.md` → `/flow-prd`
-- `prd.md` présent, pas de `architecture.md` → `/flow-architecture`
-- `architecture.md` présent, pas de `epics/` → `/flow-epics`
-- `epics/` présent, pas de `sprint-status.yaml` → `/flow-sprint`
-- `sprint-status.yaml` avec stories `ready-for-dev`/`backlog` → `/flow-story <id>` ou `/flow-auto`
+Determine the phase from the artifacts present:
+- No `.agents/` + existing code → brownfield, recommend `/flow-introspect`
+- No `.agents/` + empty repo → greenfield, recommend `/flow-brainstorm` or `/flow-brief`
+- `product-brief.md` present, no `prd.md` → `/flow-prd`
+- `prd.md` present, no `architecture.md` → `/flow-architecture`
+- `architecture.md` present, no `epics/` → `/flow-epics`
+- `epics/` present, no `sprint-status.yaml` → `/flow-sprint`
+- `sprint-status.yaml` with `ready-for-dev`/`backlog` stories → `/flow-story <id>` or `/flow-auto`
 - Story `in-progress` → `/flow-dev <id>`
 - Story `review` → `/flow-review <id>`
-- Toutes stories d'un epic `done` mais pas retro → `/flow-retro`
-- Signal changement majeur → `/flow-course-correct`
+- All stories of an epic `done` but no retro yet → `/flow-retro`
+- Major change signaled → `/flow-course-correct`
 
-### Step 3 — Gates et priorisation
+### Step 3 — Gates and prioritization
 
-- Ne recommande jamais une phase sans son prérequis (pas de `flow-architecture` sans PRD, pas de `flow-story` sans sprint-status).
-- Privilégie l'option `/flow-auto` quand plusieurs stories sont prêtes en backlog/ready-for-dev (batch mode).
-- Si une story est en cours, recommande de finir son cycle avant d'en attaquer une autre.
+- Never recommend a phase without its prerequisite (no `flow-architecture` without PRD, no `flow-story` without sprint-status).
+- Prefer `/flow-auto` when several stories are ready in backlog/ready-for-dev (batch mode).
+- If a story is in progress, recommend finishing its cycle before starting a new one.
 
 ## Output
 
-Format de sortie en deux blocs :
+Two-block output format:
 
-### Bloc 1 — Dashboard (si sprint en cours)
+### Block 1 — Dashboard (if sprint in progress)
 
 ```
-Sprint: <nom> | Stories: <total> | Done: <n> | En cours: <n> | Backlog: <n>
+Sprint: <name> | Stories: <total> | Done: <n> | In progress: <n> | Backlog: <n>
 
 Epic 1 (done)
   ✓ 1-1-init-driver-profile   done
@@ -98,25 +101,25 @@ Epic 3 (not-started)
   ○ 3-1-...                   backlog
 ```
 
-### Bloc 2 — Reco (toujours, 4 lignes max)
+### Block 2 — Recommendation (always, 4 lines max)
 
 ```
-État    : <phase courante + résumé>
-Reco    : /flow-<nom> [args]
-Pourquoi: <1 phrase>
-Sortie  : <artefact attendu>
+State : <current phase + summary>
+Reco  : /flow-<name> [args]
+Why   : <1 sentence>
+Output: <expected artifact>
 ```
 
-**Ne lance pas le skill suivant.** Propose, l'utilisateur invoque.
+**Do not launch the next skill.** Propose, the user invokes.
 
-## Notes d'implémentation
+## Implementation notes
 
-- Lis `sprint-status.yaml` via Read directement (un seul fichier YAML).
-- Pour grouper par epic, parse `story.epic` et trie numériquement (epic-001, epic-002…).
-- Pour le slug, utilise l'id complet (`1-1-init-driver-profile` plutôt que `story-001-01`) — cohérent avec ce que voit l'utilisateur dans les noms de fichier.
-- Si la liste est très longue (> 50 stories), n'affiche pas les epics 100% done en détail — montre juste "Epic N (done — 8 stories)" en compact.
+- Read `sprint-status.yaml` directly via Read (single YAML file).
+- To group by epic, parse `story.epic` and sort numerically (epic-001, epic-002…).
+- For the slug, use the full id (`1-1-init-driver-profile` rather than `story-001-01`) — consistent with what the user sees in file names.
+- If the list is very long (> 50 stories), don't display 100%-done epics in detail — show "Epic N (done — 8 stories)" compactly.
 
-## Arborescence `.agents/` de référence
+## `.agents/` reference layout
 
 ```
 .agents/

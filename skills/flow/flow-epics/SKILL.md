@@ -1,100 +1,99 @@
 ---
 name: flow-epics
-description: Découpe le PRD et l'architecture en epics + stories actionnables avec
-  critères d'acceptation BDD (phase solutioning). Append-only document avec validation
-  user à chaque étape. À utiliser après /flow-architecture validée.
+description: Breaks the PRD and architecture into epics + actionable stories with BDD acceptance criteria (solutioning phase).
+  Append-only document with user validation at each step. Use after /flow-architecture is validated.
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-epics — découpe en stories actionnables
+# flow-epics — actionable story breakdown
 
-Tu es product strategist + specs writer. Tu transformes le PRD en epics et stories que le dev pourra implémenter de façon autonome. Le but : zéro ambiguïté côté implémentation.
+You are a product strategist + specs writer. You transform the PRD into epics and stories that a developer can implement autonomously. The goal: zero ambiguity on the implementation side.
 
-## Quand l'utiliser
+## When to use
 
-- Après `flow-architecture` validée
-- Validation des prérequis : PRD + architecture présents
+- After `flow-architecture` is validated
+- Prerequisite check: PRD + architecture present
 
-## Inputs (obligatoires, à lire avant toute proposition)
+## Inputs (required, read before any proposal)
 
 - `.agents/planning/prd.md`
 - `.agents/planning/architecture.md`
-- `.agents/project-context.md` si brownfield
+- `.agents/project-context.md` if brownfield
 
 ## Process
 
-### Step 1 — Validation prérequis
-- Confirme PRD et architecture présents
-- Si absent, stop et redirige vers `flow-prd` ou `flow-architecture`
+### Step 1 — Prerequisite validation
+- Confirm PRD and architecture are present
+- If missing, stop and redirect to `flow-prd` or `flow-architecture`
 
-### Step 2 — Identification des epics
-- Identifie 3-7 epics (regroupements logiques de valeur user)
-- Chaque epic = un livrable cohérent, démontrable
-- Évite les epics purement techniques (sauf si refonte explicite)
+### Step 2 — Epic identification
+- Identify 3-7 epics (logical groupings of user value)
+- Each epic = a coherent, demonstrable deliverable
+- Avoid purely technical epics (unless explicit refactor)
 
-Présente la liste, attends validation user.
+Present the list, wait for user validation.
 
-### Step 3 — Découpe par epic (séquentiellement)
-Pour chaque epic, séquentiellement :
-1. Crée `.agents/planning/epics/epic-NNN-<slug>.md`
-2. Découpe en stories actionnables
-3. Pour chaque story, écris les critères d'acceptation **BDD** (Given/When/Then)
-4. Identifie composants architecture touchés
-5. Identifie dépendances entre stories
+### Step 3 — Per-epic breakdown (sequentially)
+For each epic, sequentially:
+1. Create `.agents/planning/epics/epic-NNN-<slug>.md`
+2. Break it down into actionable stories
+3. For each story, write **BDD** acceptance criteria (Given/When/Then)
+4. Identify affected architecture components
+5. Identify inter-story dependencies
 
-**Sizing cohérent** : 1 story = 1-3 jours dev. Si plus gros, redécoupe.
+**Consistent sizing**: 1 story = 1-3 dev days. If larger, break it down further.
 
-Présente l'epic complet, validation user avant l'epic suivant.
+Present the complete epic, get user validation before the next epic.
 
-### Step 4 — Cross-checks finaux
-- Toutes les user stories du PRD sont-elles couvertes ?
-- L'ordre d'exécution est-il cohérent (dépendances) ?
-- Y a-t-il des stories sans valeur user (purement techniques) à justifier ?
+### Step 4 — Final cross-checks
+- Are all PRD user stories covered?
+- Is the execution order coherent (dependencies)?
+- Are there stories without user value (purely technical) that need justification?
 
-## Format d'un epic
+## Epic format
 
 ```markdown
 ---
 epicId: epic-001
-title: <titre>
+title: <title>
 status: planned
 ---
 
-# Epic 001 — <titre>
+# Epic 001 — <title>
 
-## Objectif business
-<une phrase qui répond : pourquoi cet epic ?>
+## Business objective
+<one sentence answering: why this epic?>
 
-## Valeur livrée
-<ce que l'utilisateur peut faire de nouveau après cet epic>
+## Delivered value
+<what the user can newly do after this epic>
 
 ## Stories
 
-### story-001-01 — <titre>
+### story-001-01 — <title>
 
-**Description** : En tant que <user>, je veux <action>, afin de <bénéfice>.
+**Description**: As a <user>, I want <action>, so that <benefit>.
 
-**Critères d'acceptation (BDD)** :
-- Given <contexte>, when <action>, then <résultat>
+**Acceptance criteria (BDD)**:
+- Given <context>, when <action>, then <result>
 - Given ..., when ..., then ...
 
-**Composants touchés** :
-- <ref architecture : module, fichiers principaux>
+**Affected components**:
+- <architecture ref: module, main files>
 
-**Dépendances** : <story IDs précédentes ou aucune>
+**Dependencies**: <previous story IDs or none>
 
-**Taille** : S / M / L (1-3 jours dev)
+**Size**: S / M / L (1-3 dev days)
 
-**Notes techniques** : <points d'attention, refs project-context>
+**Technical notes**: <key points, project-context refs>
 ```
 
 ## Output
 
-- Plusieurs fichiers `.agents/planning/epics/epic-NNN-<slug>.md`
-- Chaque epic auto-suffisant (lisible isolément)
+- Multiple files `.agents/planning/epics/epic-NNN-<slug>.md`
+- Each epic self-sufficient (readable in isolation)
 
-## Suite
+## Next
 
-Quand tous les epics sont créés, `/flow-sprint` pour ordonnancer en sprint avec state machine.
+Once all epics are created, `/flow-sprint` to order them in a sprint with state machine.

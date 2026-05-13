@@ -1,99 +1,101 @@
 ---
 name: flow-commit
-description: "Phase COMMIT d'une story : produit un commit conventional-commits (type(scope): description) à partir du story file et du diff, propose au user, applique, puis update sprint-status review → done et identifie la story suivante. À utiliser après /flow-review verdict approved."
+description: 'COMMIT phase of a story: builds a conventional-commits message (type(scope): description) from the story file
+  and the diff, proposes it to the user, applies it, then updates sprint-status review -> done and identifies the next story.
+  Use after /flow-review verdict approved.'
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-commit — commit propre + fermeture story
+# flow-commit — clean commit + story closure
 
-Tu produis un commit qui résume ce que la story a livré, du point de vue de quelqu'un qui lit le git log dans 6 mois. Ni trop court, ni trop bavard.
+You produce a commit that summarizes what the story delivered, from the perspective of someone reading the git log 6 months from now. Neither too short, nor too verbose.
 
-## Quand l'utiliser
+## When to use
 
-- Après `/flow-review` avec verdict `approved`
-- Pour clôturer une story en `review`
+- After `/flow-review` with an `approved` verdict
+- To close a story in `review`
 
-## Inputs (obligatoires)
+## Inputs (required)
 
-- `.agents/implementation/stories/story-<id>.md` (titre, AC, File List, Senior Review)
-- Le diff git stagé ou non stagé (`git status`, `git diff`)
+- `.agents/implementation/stories/story-<id>.md` (title, AC, File List, Senior Review)
+- Git diff staged or unstaged (`git status`, `git diff`)
 - `.agents/implementation/sprint-status.yaml`
 
 ## Process
 
 ### Step 1 — Sanity checks
 
-**Pré-check git** : si le dossier n'est pas un repo git (`git rev-parse --git-dir` échoue), initialise-le :
+**Git pre-check**: if the folder is not a git repo (`git rev-parse --git-dir` fails), initialize it:
 ```bash
 git init -b main
 ```
-Pas de message d'erreur, c'est attendu pour les projets greenfield où le premier commit vient de l'agent.
+No error needed, this is expected for greenfield projects where the first commit comes from the agent.
 
-**Puis** :
-- `git status` : confirme que les fichiers de la File List du story sont bien modifiés
-- Si fichiers non listés modifiés : signale et demande (peut-être bug, peut-être oubli File List). **Mode batch (`$FLOW_AUTO=1`)** : ajoute-les si ils sont dans le scope évident de la story, sinon écris une note dans Dev Notes et exit non-zero.
-- Si rien à committer : stop, demande à l'utilisateur. **Mode batch** : exit non-zero avec message clair.
+**Then**:
+- `git status`: confirm the files from the story's File List are indeed modified
+- If unlisted files are modified: flag and ask (could be bug, could be missing File List entry). **Batch mode (`$FLOW_AUTO=1`)**: add them if they are clearly in the story's scope, otherwise write a note in Dev Notes and exit non-zero.
+- If nothing to commit: stop, ask the user. **Batch mode**: exit non-zero with a clear message.
 
-### Step 2 — Compose le message
+### Step 2 — Compose the message
 
-Format **conventional commits** :
+**Conventional commits** format:
 ```
-type(scope): description courte (<= 72 chars)
+type(scope): short description (<= 72 chars)
 
-[corps optionnel : pourquoi, pas le quoi]
+[optional body: why, not what]
 
 Closes story-<id>
 ```
 
-Règles :
-- **type** : `feat` (nouvelle fonctionnalité), `fix` (bug), `refactor`, `chore`, `docs`, `test`, `perf`, `style`
-- **scope** : module touché (ex: `auth`, `api`, `worker`, `db`). Optionnel mais recommandé.
-- **description** : impératif, minuscules, pas de point final
-- **corps** : pourquoi le changement, ce qui a été appris, références (story, PR, issue). Pas le quoi (le diff parle).
+Rules:
+- **type**: `feat` (new feature), `fix` (bug), `refactor`, `chore`, `docs`, `test`, `perf`, `style`
+- **scope**: affected module (e.g., `auth`, `api`, `worker`, `db`). Optional but recommended.
+- **description**: imperative, lowercase, no trailing period
+- **body**: why the change, what was learned, references (story, PR, issue). Not the what (the diff speaks).
 
-### Step 3 — Validation (mode interactif)
+### Step 3 — Validation (interactive mode)
 
-Présente le message rédigé. Demande validation explicite :
+Present the drafted message. Ask for explicit validation:
 ```
 (a) Apply / (b) Edit / (c) Cancel
 ```
 
-**Mode batch (`$FLOW_AUTO=1`)** : skip la validation. Auto-apply directement (Step 4).
+**Batch mode (`$FLOW_AUTO=1`)**: skip validation. Auto-apply directly (Step 4).
 
 ### Step 4 — Apply
-- `git add` les fichiers de la File List + `git commit -m "..."` (HEREDOC pour préserver formatting)
-- En mode interactif uniquement : si `b`, itère sur le message ; si `c`, stop sans rien commit.
+- `git add` the files from the File List + `git commit -m "..."` (HEREDOC to preserve formatting)
+- In interactive mode only: if `b`, iterate on the message; if `c`, stop without committing.
 
-**Ne push pas** sans demande explicite de l'utilisateur — y compris en mode batch. `flow-auto` ne push jamais.
+**Do NOT push** without an explicit user request — including in batch mode. `flow-auto` never pushes.
 
 ### Step 5 — Update sprint-status
 
-- Status story : `review` → `done`
+- Story status: `review` → `done`
 - `currentStory` → `null`
-- Identifie la **prochaine story** prête (`ready-for-dev`, dépendances satisfaites) et la signale dans la sortie
+- Identify the **next ready story** (`ready-for-dev`, dependencies satisfied) and surface it in the output
 
-### Step 6 — Check fin d'epic
-Si toutes les stories de l'epic sont `done` :
-- Signale : "Epic <epic-id> terminé."
-- Propose `/flow-retro`
+### Step 6 — Epic completion check
+If all stories of the epic are `done`:
+- Note: "Epic <epic-id> complete."
+- Suggest `/flow-retro`
 
 ## Output
 
-- Commit appliqué dans git
-- sprint-status mis à jour
-- Annonce de la story suivante OU fin d'epic
+- Commit applied in git
+- sprint-status updated
+- Announcement of the next story OR end of epic
 
-## Suite
+## Next
 
-- Story suivante → `/flow-story <next-id>` (dans nouvelle session si `/flow-auto`)
-- Fin d'epic → `/flow-retro`
-- Fin de sprint complet → `/flow-help` pour décider
+- Next story → `/flow-story <next-id>` (in a new session if running `/flow-auto`)
+- End of epic → `/flow-retro`
+- End of full sprint → `/flow-help` to decide what's next
 
-## Mode batch (`$FLOW_AUTO=1`)
+## Batch mode (`$FLOW_AUTO=1`)
 
-- Pas de menu (a)/(b)/(c). Auto-apply le commit composé.
-- Pas de push (jamais).
-- Sortie attendue : story en `done` dans sprint-status, exit 0.
-- Si rien à committer ou conflit → exit non-zero pour stopper la boucle `flow-auto/run.sh`.
+- No (a)/(b)/(c) menu. Auto-apply the composed commit.
+- No push (ever).
+- Expected output: story `done` in sprint-status, exit 0.
+- Nothing to commit or conflict → exit non-zero to stop the `flow-auto/run.sh` loop.

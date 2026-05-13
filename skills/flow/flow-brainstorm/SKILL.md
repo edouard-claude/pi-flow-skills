@@ -1,54 +1,53 @@
 ---
 name: flow-brainstorm
-description: Brainstorming guidé pour concevoir un produit depuis zéro (phase analysis
-  greenfield). Facilitation interactive avec techniques d'idéation diversifiées, une
-  à la fois, avec inputs utilisateur entre chaque. À utiliser quand l'utilisateur
-  part d'une idée floue, dit 'aide-moi à réfléchir', 'brainstormons', ou invoque /flow-brainstorm.
+description: Guided brainstorming to design a product from scratch (greenfield analysis phase). Interactive facilitation with
+  diverse ideation techniques, one at a time, with user input between each. Use when the user starts from a fuzzy idea, says
+  'help me think', 'let us brainstorm', or invokes /flow-brainstorm.
 version: 0.1.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
 
-# flow-brainstorm — idéation guidée
+# flow-brainstorm — guided ideation
 
-Tu es facilitateur d'idéation, pas générateur d'idées. L'utilisateur est le créateur ; toi tu déroules une technique, tu poses les bonnes questions, et tu captures.
+You are an ideation facilitator, not an idea generator. The user is the creator; you run a technique, ask the right questions, and capture.
 
-## Quand l'utiliser
+## When to use
 
-- Idée encore floue, plusieurs directions possibles
-- Avant `flow-brief` quand le concept n'est pas mûr
-- Aussi pour des sous-problèmes (UX d'une feature, naming, etc.)
+- Idea still fuzzy, multiple directions possible
+- Before `flow-brief` when the concept is not mature
+- Also for sub-problems (UX of a feature, naming, etc.)
 
 ## Inputs
 
-- Thème fourni en argument ou demandé en première question
-- Optionnel : `.agents/planning/current-state.md` si brownfield (oriente vers contraintes existantes)
+- Theme passed as argument or asked as first question
+- Optional: `.agents/planning/current-state.md` if brownfield (anchors to existing constraints)
 
 ## Process
 
-1. **Cadrage** (1 question) : "Quel est ton thème, et que cherches-tu — divergence d'idées, exploration de scope, résolution d'un blocage ?"
+1. **Framing** (1 question): "What's your theme, and what are you after — idea divergence, scope exploration, unblocking a problem?"
 
-2. **Propose 3-5 techniques** adaptées au cadrage. Décris chacune en 1 ligne :
-   - **How Might We** — reformuler le problème en opportunités
-   - **Crazy 8s** — 8 idées rapides en 8 minutes (divergence pure)
-   - **SCAMPER** — Substituer / Combiner / Adapter / Modifier / Prendre autre usage / Éliminer / Réorganiser
-   - **Working Backwards** — partir du communiqué de presse final
-   - **5 Whys** — creuser la cause racine d'un besoin
+2. **Propose 3-5 techniques** suited to the framing. One-line description for each:
+   - **How Might We** — reframe the problem as opportunities
+   - **Crazy 8s** — 8 quick ideas in 8 minutes (pure divergence)
+   - **SCAMPER** — Substitute / Combine / Adapt / Modify / Put to another use / Eliminate / Reverse
+   - **Working Backwards** — start from the final press release
+   - **5 Whys** — dig into the root cause of a need
 
-3. **Une technique à la fois**. Attends les inputs entre chaque. Reformule, challenge gentiment, demande "anything else ?" jusqu'à épuisement.
+3. **One technique at a time**. Wait for inputs between each. Reformulate, gently challenge, ask "anything else?" until exhausted.
 
-4. **Synthèse finale** :
-   - 5 idées clés ressorties
-   - 1 reco argumentée (pas une opinion gratuite — basée sur ce que tu as entendu)
+4. **Final synthesis**:
+   - 5 key ideas that emerged
+   - 1 reasoned recommendation (not an offhand opinion — grounded in what you heard)
 
 ## Output
 
-`.agents/planning/brainstorm-<theme-slug>.md` :
-- Thème + cadrage
-- Techniques utilisées + outputs bruts par technique
-- Synthèse (5 idées clés)
-- Reco
+`.agents/planning/brainstorm-<theme-slug>.md`:
+- Theme + framing
+- Techniques used + raw outputs per technique
+- Synthesis (5 key ideas)
+- Recommendation
 
-## Suite
+## Next
 
-Quand fini, propose `/flow-brief` pour formaliser le concept. Si l'utilisateur veut creuser une idée différente, relance `/flow-brainstorm` avec nouveau thème.
+When done, suggest `/flow-brief` to formalize the concept. If the user wants to dig into a different idea, relaunch `/flow-brainstorm` with a new theme.
