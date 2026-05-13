@@ -70,13 +70,27 @@ Present the drafted message. Ask for explicit validation:
 
 **Do NOT push** without an explicit user request — including in batch mode. `flow-auto` never pushes.
 
-### Step 5 — Update sprint-status
+### Step 5 — Enrich story frontmatter (closure metadata)
+
+Just before flipping the sprint-status, add or refresh two keys in the story file's YAML frontmatter:
+
+- `completed: YYYY-MM-DD` — the commit date.
+- `tags: [tag-a, tag-b, ...]` — 2 to 5 short lowercase hyphenated nouns identifying the **feature surfaces this story freezes**. Examples: `session`, `auth-jwt`, `provider-anthropic`, `tui-input`, `persistence-jsonl`, `compaction`, `config`, `tests`.
+
+Tagging rules:
+- Reuse existing tags found in peer stories' frontmatters whenever possible (consistency over creativity). Run a quick `grep -h '^tags:' .agents/implementation/stories/*.md` to align with the project's vocabulary.
+- Coin a new tag only when no existing one fits. Prefer surface (`session-tree`) over technology (`go-routine`).
+- Tags name **what the story stabilizes** — not what it does. A story implementing `/compact` tags `compaction`, not `slash-command`.
+
+These tags are consumed by `/flow-recall` to filter the corpus by feature surface without re-reading every story body.
+
+### Step 6 — Update sprint-status
 
 Edit only `development_status[<story-id>]` from `review` to `done`. Nothing else. Don't add `currentStory` keys, don't add comments — keep the YAML pristine.
 
 Then surface (in your stdout, NOT in the YAML) the **next ready story** (`ready-for-dev` or `backlog` with deps satisfied via `dependencies:`).
 
-### Step 6 — Epic completion check
+### Step 7 — Epic completion check
 
 If all stories of the epic are `done` in `development_status`:
 - Update `development_status[epic-NNN]` from `in-progress` to `done`

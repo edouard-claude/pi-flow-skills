@@ -17,7 +17,7 @@ The `flow-auto` orchestrator pre-checks all four. The individual skills (`flow-h
 ## Installation
 
 ```bash
-pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.4
+pi install git:github.com/edouard-claude/pi-flow-skills@v0.3.0
 ```
 
 ## Skills
@@ -37,6 +37,7 @@ pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.4
 | `flow-dev` | implementation | DEV — red-green-refactor with halt conditions |
 | `flow-review` | implementation | REVIEW — three adversarial reviewers (Blind / Edge Case / Acceptance) |
 | `flow-commit` | implementation | Conventional commit + sprint-status update |
+| `flow-recall` | anytime | Pre-flight semantic check — scans frozen corpus, surfaces contradictions/overlaps before a new brief/PRD/story. Advisory, never blocks. |
 | `flow-quick` | anytime | Bypass for small tasks (< 1 day) |
 | `flow-course-correct` | anytime | Mid-sprint scope change (Minor / Moderate / Major) |
 | `flow-retro` | end of epic | Party-mode retrospective + critical readiness check |
@@ -99,6 +100,8 @@ Override defaults:
 │   ├── stories/
 │   │   └── story-XXX.md
 │   └── retro-epic-XXX.md
+├── recall/
+│   └── recall-<slug>-YYYY-MM-DD.md
 └── project-context.md
 ```
 
