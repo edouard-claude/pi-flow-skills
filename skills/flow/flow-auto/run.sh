@@ -77,7 +77,7 @@ if ! find "$PI_AGENT_DIR/skills" "$PI_AGENT_DIR/git" \
      -type d -name "flow-story" 2>/dev/null | grep -q .; then
   echo "ERROR: flow-* skills not found under $PI_AGENT_DIR" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.3" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.4" >&2
   exit 1
 fi
 
@@ -126,43 +126,118 @@ fi
 
 sticky_setup() {
   [ "$STICKY" = "1" ] || return 0
-  # Clear screen, move cursor to top
+  # Clear screen, hide cursor briefly to avoid flicker
   printf "\033[2J\033[1;1H" >&2
-  # We'll print the header first (will occupy lines 1..HEADER_LINES),
-  # then set the scrolling region and move cursor below.
 }
 
 sticky_lock_below_header() {
   [ "$STICKY" = "1" ] || return 0
-  local h=$(tput lines 2>/dev/null || echo 24)
-  # Define scrolling region from line HEADER_LINES+1 to bottom
+  local h
+  h=$(tput lines 2>/dev/null || echo 24)
   printf "\033[%d;%dr" $((HEADER_LINES + 1)) "$h" >&2
-  # Move cursor to start of scrolling region
   printf "\033[%d;1H" $((HEADER_LINES + 1)) >&2
 }
 
 sticky_reset() {
   [ "$STICKY" = "1" ] || return 0
-  # Reset scrolling region to full screen, restore cursor visibility
   printf "\033[r\033[?25h" >&2
 }
 
-# Refresh the header in place without disturbing the scrolled content below.
+# Render the entire header block (banner + compact dashboard) using ABSOLUTE
+# cursor positioning so we never trigger scroll. Each of the HEADER_LINES
+# rows is positioned with `\033[N;1H`, cleared with `\033[2K`, then printed.
+# Pads with blank cleared rows if content < HEADER_LINES.
+render_header_block_at_top() {
+  uvx --quiet --with pyyaml python3 - "$STATUS" "$HEADER_LINES" \
+    "$C_RESET" "$C_BOLD" "$C_DIM" "$C_GREEN" "$C_YELLOW" "$C_BLUE" "$C_GRAY" "$C_CYAN" \
+    "$PI_BIN" "$PI_MODE" \
+    <<'PY' >&2
+import sys, yaml, re
+status_path = sys.argv[1]
+header_lines = int(sys.argv[2])
+RESET, BOLD, DIM, GREEN, YELLOW, BLUE, GRAY, CYAN = sys.argv[3:11]
+pi_bin, pi_mode = sys.argv[11], sys.argv[12]
+
+with open(status_path) as f:
+    data = yaml.safe_load(f)
+ds = data.get("development_status", {}) or {}
+
+STORY = re.compile(r"^story-(\d+)-(\d+)$")
+EPIC = re.compile(r"^epic-(\d+)$")
+stories = [(k, v) for k, v in ds.items() if STORY.match(k)]
+total = len(stories)
+done = sum(1 for _, s in stories if s == "done")
+in_flight = sum(1 for _, s in stories if s in ("in-progress", "review"))
+ready = sum(1 for _, s in stories if s == "ready-for-dev")
+backlog = sum(1 for _, s in stories if s == "backlog")
+pct = (done * 100 // total) if total else 0
+
+width = 40
+filled = (done * width) // total if total else 0
+bar = GREEN + "█" * filled + GRAY + "░" * (width - filled) + RESET
+
+current_epic = None
+for k, v in ds.items():
+    m = STORY.match(k)
+    if m and v in ("in-progress", "review", "ready-for-dev"):
+        current_epic = f"epic-{m.group(1).zfill(3)}"
+        break
+if current_epic is None:
+    for k, v in ds.items():
+        m = EPIC.match(k)
+        if m and v != "done":
+            current_epic = k
+            break
+if current_epic:
+    epic_status = ds.get(current_epic, "?")
+    epic_stories = [(k, v) for k, v in ds.items() if STORY.match(k) and f"epic-{STORY.match(k).group(1).zfill(3)}" == current_epic]
+    e_done = sum(1 for _, s in epic_stories if s == "done")
+    epic_line = f"{BOLD}Current epic{RESET}  {CYAN}{current_epic}{RESET}  {DIM}({epic_status} — {e_done}/{len(epic_stories)}){RESET}"
+else:
+    epic_line = ""
+
+lines = [
+    f"{BOLD}{CYAN}╭──────────────────────────────────────────────────────────╮{RESET}",
+    f"{BOLD}{CYAN}│              flow-auto — sprint orchestrator             │{RESET}",
+    f"{BOLD}{CYAN}╰──────────────────────────────────────────────────────────╯{RESET}",
+    f"{DIM}  status: {status_path}{RESET}",
+    f"{DIM}  pi: {pi_bin}  |  mode: {pi_mode}  |  FLOW_AUTO=1{RESET}",
+    "",
+    f"{BOLD}Progress{RESET} {bar} {BOLD}{pct}%{RESET} {DIM}({done}/{total}){RESET}",
+    f"  {GREEN}● done {done}{RESET}  {YELLOW}● in-flight {in_flight}{RESET}  {BLUE}● ready {ready}{RESET}  {GRAY}● backlog {backlog}{RESET}",
+    "",
+    epic_line,
+]
+# Pad to exactly header_lines
+while len(lines) < header_lines:
+    lines.append("")
+lines = lines[:header_lines]
+
+# Emit each line at absolute position (row N, col 1), preceded by "clear line".
+# No \n at all — strictly absolute positioning so we never trigger scroll.
+out = []
+for i, content in enumerate(lines, start=1):
+    out.append(f"\033[{i};1H\033[2K{content}")
+sys.stdout.write("".join(out))
+sys.stdout.flush()
+PY
+}
+
+# Refresh the header in place. Uses DECSC/DECRC (\0337/\0338) for cursor
+# save/restore (more portable than \033[s/u SCOSC).
 sticky_refresh_header() {
-  [ "$STICKY" = "1" ] || { print_banner; print_dashboard_compact; return; }
-  # Save cursor, jump to top, clear header lines, draw, restore region, restore cursor
-  printf "\033[s" >&2          # save cursor
-  printf "\033[r" >&2          # reset region temporarily so we can write at top
-  printf "\033[1;1H" >&2       # go to (1,1)
-  local i
-  for i in $(seq 1 "$HEADER_LINES"); do printf "\033[2K\n" >&2; done
-  printf "\033[1;1H" >&2
-  print_banner
-  print_dashboard_compact
-  # Re-arm scrolling region
-  local h=$(tput lines 2>/dev/null || echo 24)
-  printf "\033[%d;%dr" $((HEADER_LINES + 1)) "$h" >&2
-  printf "\033[u" >&2          # restore cursor
+  if [ "$STICKY" != "1" ]; then
+    print_banner
+    print_dashboard_compact
+    return
+  fi
+  printf "\0337" >&2                                      # DECSC save cursor
+  printf "\033[r" >&2                                     # reset region
+  render_header_block_at_top                              # paint header (absolute positioning)
+  local h
+  h=$(tput lines 2>/dev/null || echo 24)
+  printf "\033[%d;%dr" $((HEADER_LINES + 1)) "$h" >&2     # re-arm region
+  printf "\0338" >&2                                      # DECRC restore cursor
 }
 
 # Ensure we always restore the terminal on exit
@@ -320,12 +395,10 @@ start_time=$(date +%s)
 # region below it. If STICKY is disabled (non-TTY or small terminal), just
 # print once and let everything flow normally.
 if [ "$STICKY" = "1" ]; then
-  sticky_setup
-  print_banner
-  print_dashboard_compact
-  sticky_lock_below_header
-  # Print the full "next actionable" list once in the scrolling body
-  print_dashboard
+  sticky_setup                  # clear screen
+  render_header_block_at_top    # paint banner+compact dashboard at absolute positions
+  sticky_lock_below_header      # set scrolling region below header, move cursor in
+  print_dashboard               # full dashboard (with "Next actionable") in scroll body
 else
   print_banner
   print_dashboard
