@@ -36,6 +36,13 @@ export FLOW_AUTO=1
 # Override: PI_MODE=text for concatenated text output at the end.
 PI_MODE="${PI_MODE:-json}"
 
+# Path to the companion markdown formatter (sits next to this script).
+MD_FORMAT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/md-format.py"
+if [ ! -x "$MD_FORMAT" ]; then
+  # Fall back to a no-op (cat) if the formatter is missing or not executable.
+  MD_FORMAT=$(command -v cat)
+fi
+
 if [ ! -f "$STATUS" ]; then
   echo "ERROR: sprint-status not found: $STATUS" >&2
   echo "Run /flow-sprint first." >&2
@@ -70,7 +77,7 @@ if ! find "$PI_AGENT_DIR/skills" "$PI_AGENT_DIR/git" \
      -type d -name "flow-story" 2>/dev/null | grep -q .; then
   echo "ERROR: flow-* skills not found under $PI_AGENT_DIR" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.2" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.3" >&2
   exit 1
 fi
 
@@ -476,10 +483,13 @@ run_phase() {
          --append-system-prompt "$BATCH_PROMPT" \
          "/$phase $story" || rc=$?
   else
+    # Pipe: pi events → jq formatter → markdown beautifier → terminal.
+    # set -o pipefail propagates the first non-zero exit so pi failures abort.
     "$PI_BIN" --print --no-session --mode "$PI_MODE" \
          --append-system-prompt "$BATCH_PROMPT" \
          "/$phase $story" \
-       | jq --unbuffered -j "$JQ_FORMAT" || rc=$?
+       | jq --unbuffered -j "$JQ_FORMAT" \
+       | "$MD_FORMAT" || rc=$?
   fi
   if [ "$rc" -ne 0 ]; then
     echo "ERROR: /$phase $story failed (code $rc)" >&2
