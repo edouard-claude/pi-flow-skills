@@ -70,7 +70,7 @@ if ! find "$PI_AGENT_DIR/skills" "$PI_AGENT_DIR/git" \
      -type d -name "flow-story" 2>/dev/null | grep -q .; then
   echo "ERROR: flow-* skills not found under $PI_AGENT_DIR" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.1" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.2" >&2
   exit 1
 fi
 
@@ -93,17 +93,130 @@ fi
 echo ">>> pre-flight OK." >&2
 
 # ────────────────────────────────────────────────────────────────────────────
-# UI helpers
+# UI helpers — sticky header via ANSI scrolling region (DECSTBM)
 # ────────────────────────────────────────────────────────────────────────────
+#
+# Mechanism:
+#   1. Reserve the top HEADER_LINES rows for a fixed header (banner + dashboard)
+#   2. Set scrolling region to lines [HEADER_LINES+1 .. bottom] via \033[N;Mr
+#   3. All subsequent output (Pi stream) scrolls inside that region; the header
+#      stays put.
+#   4. Between stories, we redraw the header in-place (save/restore cursor).
+#
+# Disabled when:
+#   - stderr is not a TTY (piped to file)
+#   - NO_STICKY_HEADER env var is set
+#   - terminal is too small (< 24 rows)
+
+HEADER_LINES=12
+STICKY=0
+if [ -t 2 ] && [ -z "${NO_STICKY_HEADER:-}" ]; then
+  TERM_HEIGHT=$(tput lines 2>/dev/null || echo 0)
+  if [ "$TERM_HEIGHT" -ge 24 ]; then
+    STICKY=1
+  fi
+fi
+
+sticky_setup() {
+  [ "$STICKY" = "1" ] || return 0
+  # Clear screen, move cursor to top
+  printf "\033[2J\033[1;1H" >&2
+  # We'll print the header first (will occupy lines 1..HEADER_LINES),
+  # then set the scrolling region and move cursor below.
+}
+
+sticky_lock_below_header() {
+  [ "$STICKY" = "1" ] || return 0
+  local h=$(tput lines 2>/dev/null || echo 24)
+  # Define scrolling region from line HEADER_LINES+1 to bottom
+  printf "\033[%d;%dr" $((HEADER_LINES + 1)) "$h" >&2
+  # Move cursor to start of scrolling region
+  printf "\033[%d;1H" $((HEADER_LINES + 1)) >&2
+}
+
+sticky_reset() {
+  [ "$STICKY" = "1" ] || return 0
+  # Reset scrolling region to full screen, restore cursor visibility
+  printf "\033[r\033[?25h" >&2
+}
+
+# Refresh the header in place without disturbing the scrolled content below.
+sticky_refresh_header() {
+  [ "$STICKY" = "1" ] || { print_banner; print_dashboard_compact; return; }
+  # Save cursor, jump to top, clear header lines, draw, restore region, restore cursor
+  printf "\033[s" >&2          # save cursor
+  printf "\033[r" >&2          # reset region temporarily so we can write at top
+  printf "\033[1;1H" >&2       # go to (1,1)
+  local i
+  for i in $(seq 1 "$HEADER_LINES"); do printf "\033[2K\n" >&2; done
+  printf "\033[1;1H" >&2
+  print_banner
+  print_dashboard_compact
+  # Re-arm scrolling region
+  local h=$(tput lines 2>/dev/null || echo 24)
+  printf "\033[%d;%dr" $((HEADER_LINES + 1)) "$h" >&2
+  printf "\033[u" >&2          # restore cursor
+}
+
+# Ensure we always restore the terminal on exit
+trap sticky_reset EXIT INT TERM
 
 print_banner() {
-  echo "" >&2
   echo "${C_BOLD}${C_CYAN}╭──────────────────────────────────────────────────────────╮${C_RESET}" >&2
   echo "${C_BOLD}${C_CYAN}│              flow-auto — sprint orchestrator             │${C_RESET}" >&2
   echo "${C_BOLD}${C_CYAN}╰──────────────────────────────────────────────────────────╯${C_RESET}" >&2
-  echo "${C_DIM}  status file: $STATUS${C_RESET}" >&2
+  echo "${C_DIM}  status: $STATUS${C_RESET}" >&2
   echo "${C_DIM}  pi: $PI_BIN  |  mode: $PI_MODE  |  FLOW_AUTO=1${C_RESET}" >&2
-  echo "" >&2
+}
+
+# Compact dashboard — fits within HEADER_LINES rows when combined with banner.
+# No "Next actionable" list (that goes into the scrolling body before each story).
+print_dashboard_compact() {
+  uvx --quiet --with pyyaml python3 - "$STATUS" \
+    "$C_RESET" "$C_BOLD" "$C_DIM" "$C_GREEN" "$C_YELLOW" "$C_BLUE" "$C_GRAY" "$C_CYAN" \
+    <<'PY' >&2
+import sys, yaml, re
+path = sys.argv[1]
+RESET, BOLD, DIM, GREEN, YELLOW, BLUE, GRAY, CYAN = sys.argv[2:10]
+with open(path) as f:
+    data = yaml.safe_load(f)
+ds = data.get("development_status", {}) or {}
+
+STORY = re.compile(r"^story-(\d+)-(\d+)$")
+EPIC = re.compile(r"^epic-(\d+)$")
+
+stories = [(k, v) for k, v in ds.items() if STORY.match(k)]
+total = len(stories)
+done = sum(1 for _, s in stories if s == "done")
+in_flight = sum(1 for _, s in stories if s in ("in-progress", "review"))
+ready = sum(1 for _, s in stories if s == "ready-for-dev")
+backlog = sum(1 for _, s in stories if s == "backlog")
+pct = (done * 100 // total) if total else 0
+
+width = 40
+filled = (done * width) // total if total else 0
+bar = GREEN + "█" * filled + GRAY + "░" * (width - filled) + RESET
+
+print(f"{BOLD}Progress{RESET} {bar} {BOLD}{pct}%{RESET} {DIM}({done}/{total}){RESET}")
+print(f"  {GREEN}● done {done}{RESET}  {YELLOW}● in-flight {in_flight}{RESET}  {BLUE}● ready {ready}{RESET}  {GRAY}● backlog {backlog}{RESET}")
+
+current_epic = None
+for k, v in ds.items():
+    m = STORY.match(k)
+    if m and v in ("in-progress", "review", "ready-for-dev"):
+        current_epic = f"epic-{m.group(1).zfill(3)}"
+        break
+if current_epic is None:
+    for k, v in ds.items():
+        m = EPIC.match(k)
+        if m and v != "done":
+            current_epic = k; break
+if current_epic:
+    epic_status = ds.get(current_epic, "?")
+    epic_stories = [(k, v) for k, v in ds.items() if STORY.match(k) and f"epic-{STORY.match(k).group(1).zfill(3)}" == current_epic]
+    e_done = sum(1 for _, s in epic_stories if s == "done")
+    print(f"{BOLD}Current epic{RESET}  {CYAN}{current_epic}{RESET}  {DIM}({epic_status} — {e_done}/{len(epic_stories)}){RESET}")
+PY
 }
 
 # Render a compact dashboard from sprint-status.yaml: progress bar, counts,
@@ -195,8 +308,21 @@ print_summary() {
 }
 
 start_time=$(date +%s)
-print_banner
-print_dashboard
+
+# Initial render: banner + compact dashboard at top, then lock the scrolling
+# region below it. If STICKY is disabled (non-TTY or small terminal), just
+# print once and let everything flow normally.
+if [ "$STICKY" = "1" ]; then
+  sticky_setup
+  print_banner
+  print_dashboard_compact
+  sticky_lock_below_header
+  # Print the full "next actionable" list once in the scrolling body
+  print_dashboard
+else
+  print_banner
+  print_dashboard
+fi
 
 next_story() {
   # BMAD-style sprint-status: 'development_status' is a flat key:status map;
@@ -366,6 +492,7 @@ while true; do
   STORY=$(next_story)
   if [ -z "$STORY" ]; then
     elapsed=$(( $(date +%s) - start_time ))
+    sticky_reset
     print_summary "$total" "$elapsed"
     exit 0
   fi
@@ -449,7 +576,10 @@ while true; do
   fi
 
   echo "${C_GREEN}${C_BOLD}✓ ${STORY}${C_RESET}${C_DIM} → done${C_RESET}" >&2
-  print_dashboard
+  # Refresh the sticky header (progress, counts, current epic) without
+  # disturbing the scrolled output. In non-sticky mode, fall back to a
+  # full dashboard print in the flow.
+  sticky_refresh_header
 done
 
 elapsed=$(( $(date +%s) - start_time ))

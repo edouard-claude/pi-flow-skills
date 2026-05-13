@@ -17,7 +17,7 @@ The `flow-auto` orchestrator pre-checks all four. The individual skills (`flow-h
 ## Installation
 
 ```bash
-pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.1
+pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.2
 ```
 
 ## Skills
@@ -79,6 +79,8 @@ Override defaults:
 - `PI_MODE=text bash run.sh` — text output instead of streamed JSON events
 - `PI_RAW=1 bash run.sh` — raw JSON passthrough (debug)
 - `PI_BIN=/path/to/pi` — alternate Pi binary
+- `NO_COLOR=1 bash run.sh` — disable ANSI colors
+- `NO_STICKY_HEADER=1 bash run.sh` — disable the sticky top header (the dashboard scrolls with everything else)
 
 ## Artifact layout
 
