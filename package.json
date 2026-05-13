@@ -1,6 +1,6 @@
 {
   "name": "pi-flow-skills",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "BMAD-inspired sprint workflow for Pi: brainstorm, brief, PRD, architecture, epics, sprint, story/dev/review/commit cycle. Includes flow-auto, a bash orchestrator that pipelines stories through fresh Pi sessions.",
   "keywords": [
     "pi-package",

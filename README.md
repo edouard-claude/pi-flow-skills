@@ -17,7 +17,7 @@ The `flow-auto` orchestrator pre-checks all four. The individual skills (`flow-h
 ## Installation
 
 ```bash
-pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.0
+pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.1
 ```
 
 ## Skills

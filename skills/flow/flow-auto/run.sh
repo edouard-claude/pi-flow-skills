@@ -10,6 +10,23 @@ set -euo pipefail
 STATUS="${1:-.agents/implementation/sprint-status.yaml}"
 PI_BIN="${PI_BIN:-pi}"
 
+# ANSI colors. Disabled if NO_COLOR is set or stderr is not a TTY.
+if [ -z "${NO_COLOR:-}" ] && [ -t 2 ]; then
+  C_RESET=$'\033[0m'
+  C_BOLD=$'\033[1m'
+  C_DIM=$'\033[2m'
+  C_RED=$'\033[31m'
+  C_GREEN=$'\033[32m'
+  C_YELLOW=$'\033[33m'
+  C_BLUE=$'\033[34m'
+  C_MAGENTA=$'\033[35m'
+  C_CYAN=$'\033[36m'
+  C_GRAY=$'\033[90m'
+else
+  C_RESET=""; C_BOLD=""; C_DIM=""; C_RED=""; C_GREEN=""; C_YELLOW=""
+  C_BLUE=""; C_MAGENTA=""; C_CYAN=""; C_GRAY=""
+fi
+
 # Batch mode: the affected skills (flow-story, flow-dev, flow-commit) skip
 # user gates (Wait for GO, menus, Apply/Edit/Cancel) because pi --print has
 # no interactive stdin.
@@ -53,7 +70,7 @@ if ! find "$PI_AGENT_DIR/skills" "$PI_AGENT_DIR/git" \
      -type d -name "flow-story" 2>/dev/null | grep -q .; then
   echo "ERROR: flow-* skills not found under $PI_AGENT_DIR" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.0" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.2.1" >&2
   exit 1
 fi
 
@@ -74,6 +91,112 @@ if echo "$preflight_out" | grep -q "Failed to load extension"; then
   exit 1
 fi
 echo ">>> pre-flight OK." >&2
+
+# ────────────────────────────────────────────────────────────────────────────
+# UI helpers
+# ────────────────────────────────────────────────────────────────────────────
+
+print_banner() {
+  echo "" >&2
+  echo "${C_BOLD}${C_CYAN}╭──────────────────────────────────────────────────────────╮${C_RESET}" >&2
+  echo "${C_BOLD}${C_CYAN}│              flow-auto — sprint orchestrator             │${C_RESET}" >&2
+  echo "${C_BOLD}${C_CYAN}╰──────────────────────────────────────────────────────────╯${C_RESET}" >&2
+  echo "${C_DIM}  status file: $STATUS${C_RESET}" >&2
+  echo "${C_DIM}  pi: $PI_BIN  |  mode: $PI_MODE  |  FLOW_AUTO=1${C_RESET}" >&2
+  echo "" >&2
+}
+
+# Render a compact dashboard from sprint-status.yaml: progress bar, counts,
+# current epic, next stories. Written to stderr so it doesn't pollute stdout.
+print_dashboard() {
+  uvx --quiet --with pyyaml python3 - "$STATUS" \
+    "$C_RESET" "$C_BOLD" "$C_DIM" "$C_GREEN" "$C_YELLOW" "$C_BLUE" "$C_GRAY" "$C_CYAN" \
+    <<'PY' >&2
+import sys, yaml, re
+path = sys.argv[1]
+RESET, BOLD, DIM, GREEN, YELLOW, BLUE, GRAY, CYAN = sys.argv[2:10]
+with open(path) as f:
+    data = yaml.safe_load(f)
+ds = data.get("development_status", {}) or {}
+deps_map = data.get("dependencies", {}) or {}
+
+STORY = re.compile(r"^story-(\d+)-(\d+)$")
+EPIC = re.compile(r"^epic-(\d+)$")
+EPIC_RETRO = re.compile(r"^epic-(\d+)-retrospective$")
+
+stories = [(k, v) for k, v in ds.items() if STORY.match(k)]
+total = len(stories)
+done = sum(1 for _, s in stories if s == "done")
+in_flight = sum(1 for _, s in stories if s in ("in-progress", "review"))
+ready = sum(1 for _, s in stories if s == "ready-for-dev")
+backlog = sum(1 for _, s in stories if s == "backlog")
+pct = (done * 100 // total) if total else 0
+
+# Progress bar
+width = 40
+filled = (done * width) // total if total else 0
+bar = GREEN + "█" * filled + GRAY + "░" * (width - filled) + RESET
+
+print(f"{BOLD}Progress{RESET}  {bar}  {BOLD}{pct}%{RESET}  {DIM}({done}/{total} stories){RESET}")
+print(f"  {GREEN}● done {done}{RESET}  {YELLOW}● in-flight {in_flight}{RESET}  {BLUE}● ready {ready}{RESET}  {GRAY}● backlog {backlog}{RESET}")
+print()
+
+# Current epic (the one with an in-flight or ready story; otherwise the first non-done)
+current_epic = None
+for k, v in ds.items():
+    m = STORY.match(k)
+    if m and v in ("in-progress", "review", "ready-for-dev"):
+        current_epic = f"epic-{m.group(1).zfill(3)}"
+        break
+if current_epic is None:
+    for k, v in ds.items():
+        m = EPIC.match(k)
+        if m and v != "done":
+            current_epic = k
+            break
+
+if current_epic:
+    epic_status = ds.get(current_epic, "?")
+    epic_stories = [(k, v) for k, v in ds.items() if STORY.match(k) and f"epic-{STORY.match(k).group(1).zfill(3)}" == current_epic]
+    e_done = sum(1 for _, s in epic_stories if s == "done")
+    e_total = len(epic_stories)
+    print(f"{BOLD}Current epic{RESET}  {CYAN}{current_epic}{RESET}  {DIM}({epic_status} — {e_done}/{e_total} stories){RESET}")
+
+# Next 5 actionable stories
+done_ids = {k for k, v in stories if v == "done"}
+def is_actionable(sid, status):
+    if status in ("in-progress", "review", "ready-for-dev"):
+        return True
+    if status == "backlog":
+        return all(d in done_ids for d in (deps_map.get(sid) or []))
+    return False
+
+actionable = [(k, v) for k, v in stories if is_actionable(k, v)][:5]
+if actionable:
+    print(f"{DIM}Next actionable:{RESET}")
+    sym = {"done": (GREEN, "✓"), "in-progress": (YELLOW, "▶"), "review": (YELLOW, "▶"),
+           "ready-for-dev": (BLUE, "◆"), "backlog": (GRAY, "○")}
+    for sid, status in actionable:
+        col, s = sym.get(status, (GRAY, "?"))
+        print(f"  {col}{s}{RESET}  {sid}  {DIM}{status}{RESET}")
+print()
+PY
+}
+
+print_summary() {
+  local stories_done="$1"
+  local elapsed_s="$2"
+  local mins=$((elapsed_s / 60))
+  local secs=$((elapsed_s % 60))
+  echo "" >&2
+  echo "${C_BOLD}${C_GREEN}╭──────────────────────────────────────────────────────────╮${C_RESET}" >&2
+  printf "${C_BOLD}${C_GREEN}│  ✓  %-52s│${C_RESET}\n" "Done — $stories_done stories processed in ${mins}m${secs}s" >&2
+  echo "${C_BOLD}${C_GREEN}╰──────────────────────────────────────────────────────────╯${C_RESET}" >&2
+}
+
+start_time=$(date +%s)
+print_banner
+print_dashboard
 
 next_story() {
   # BMAD-style sprint-status: 'development_status' is a flat key:status map;
@@ -220,7 +343,7 @@ EOF
 
 run_phase() {
   local phase="$1"; local story="$2"
-  echo ">>> phase: $phase  story: $story  (session: ephemeral, mode: $PI_MODE)"
+  echo "${C_BLUE}▶ phase:${C_RESET} ${C_BOLD}$phase${C_RESET}  ${C_DIM}story: $story  (ephemeral, mode: $PI_MODE)${C_RESET}" >&2
   local rc=0
   if [ "${PI_RAW:-0}" = "1" ]; then
     "$PI_BIN" --print --no-session --mode "$PI_MODE" \
@@ -242,16 +365,17 @@ total=0
 while true; do
   STORY=$(next_story)
   if [ -z "$STORY" ]; then
-    echo "No more stories to process. Done after $total stories."
+    elapsed=$(( $(date +%s) - start_time ))
+    print_summary "$total" "$elapsed"
     exit 0
   fi
 
   total=$((total + 1))
   initial=$(story_status "$STORY")
-  echo ""
-  echo "=========================================="
-  echo "  STORY #$total: $STORY  (resuming from: $initial)"
-  echo "=========================================="
+  echo "" >&2
+  echo "${C_BOLD}${C_MAGENTA}━━━ STORY #$total ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}" >&2
+  echo "${C_BOLD}  $STORY${C_RESET}  ${C_DIM}(entering from: $initial)${C_RESET}" >&2
+  echo "${C_MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}" >&2
 
   # Idempotency: each phase only runs if the current status warrants it.
   # Lets you restart run.sh after a crash and resume where you left off.
@@ -324,5 +448,9 @@ while true; do
     force_status "$STORY" "done" || exit 1
   fi
 
-  echo "OK: $STORY → done"
+  echo "${C_GREEN}${C_BOLD}✓ ${STORY}${C_RESET}${C_DIM} → done${C_RESET}" >&2
+  print_dashboard
 done
+
+elapsed=$(( $(date +%s) - start_time ))
+print_summary "$total" "$elapsed"
