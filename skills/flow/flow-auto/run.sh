@@ -45,13 +45,15 @@ if ! command -v jq >/dev/null 2>&1; then
   fi
 fi
 
-# Pre-flight: flow-* skills must be loaded in Pi. We check on-disk presence
-# (Pi discovers skill directories recursively).
-SKILLS_ROOT="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/skills"
-if ! find "$SKILLS_ROOT" -type d -name "flow-story" 2>/dev/null | grep -q .; then
-  echo "ERROR: flow-* skills not found under $SKILLS_ROOT" >&2
+# Pre-flight: flow-* skills must be loaded in Pi. We scan all known locations
+# where Pi resolves skills: ~/.pi/agent/skills/ (manual install) and
+# ~/.pi/agent/git/ (packages installed via `pi install git:...`).
+PI_AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+if ! find "$PI_AGENT_DIR/skills" "$PI_AGENT_DIR/git" \
+     -type d -name "flow-story" 2>/dev/null | grep -q .; then
+  echo "ERROR: flow-* skills not found under $PI_AGENT_DIR" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.6" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.7" >&2
   exit 1
 fi
 
