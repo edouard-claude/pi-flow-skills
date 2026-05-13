@@ -51,9 +51,27 @@ SKILLS_ROOT="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/skills"
 if ! find "$SKILLS_ROOT" -type d -name "flow-story" 2>/dev/null | grep -q .; then
   echo "ERROR: flow-* skills not found under $SKILLS_ROOT" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.5" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.6" >&2
   exit 1
 fi
+
+# Pre-flight: run a minimal `pi --print` to catch broken extensions early.
+# If any extension fails to load, Pi exits non-zero with "Failed to load extension"
+# and the entire flow-auto loop would die mid-story (potentially after expensive
+# work). Better to surface the issue up front with a clear pointer.
+echo ">>> pre-flight: validating pi extensions..." >&2
+preflight_out=$("$PI_BIN" --print --no-session -p "exit" 2>&1 || true)
+if echo "$preflight_out" | grep -q "Failed to load extension"; then
+  echo "ERROR: one or more pi extensions are broken. Output:" >&2
+  echo "$preflight_out" | grep -E "Failed to load extension|^Error" >&2
+  echo "" >&2
+  echo "Fix options:" >&2
+  echo "  - Edit the broken file in ~/.pi/agent/extensions/" >&2
+  echo "  - Or disable it temporarily: mv <path>.ts <path>.ts.disabled" >&2
+  echo "  - Then re-run this script." >&2
+  exit 1
+fi
+echo ">>> pre-flight OK." >&2
 
 next_story() {
   # Idempotency: prioritize a story already in progress (in-progress / review)
