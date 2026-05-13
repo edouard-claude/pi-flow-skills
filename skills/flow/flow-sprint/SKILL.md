@@ -68,7 +68,9 @@ stories:
 
 3. **Detect existing stories**: for each story in `.agents/implementation/stories/<id>.md`, if present → set status at least to `ready-for-dev`.
 
-4. **Execution order**: topological sort by `dependsOn`.
+4. **Ordering**: sort stories by `(epic, id)` so the YAML reads top-down epic by epic (epic-001 first, then epic-002, …). Dependency satisfaction is checked at runtime by `flow-auto` — the YAML order is for human readability and predictable iteration, NOT a topological sort.
+
+5. **Group with comments**: prepend each epic block with a header comment `# ===== epic-NNN =====` for visual grouping.
 
 ### Subsequent calls (update)
 

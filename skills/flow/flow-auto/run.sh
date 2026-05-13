@@ -51,7 +51,7 @@ SKILLS_ROOT="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/skills"
 if ! find "$SKILLS_ROOT" -type d -name "flow-story" 2>/dev/null | grep -q .; then
   echo "ERROR: flow-* skills not found under $SKILLS_ROOT" >&2
   echo "Install the package:" >&2
-  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.4" >&2
+  echo "  pi install git:github.com/edouard-claude/pi-flow-skills@v0.1.5" >&2
   exit 1
 fi
 
