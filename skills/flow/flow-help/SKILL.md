@@ -5,7 +5,7 @@ description: Orientation skill. Detects the current flow phase from .agents/ art
   flow-dev, flow-review, flow-commit, flow-quick, flow-course-correct, flow-retro, flow-auto. Lightweight — does not render the
   sprint dashboard (use /flow-status for that). Use when the user asks 'what do I do next', 'where are we in the process', or at
   the start of a session.
-version: 0.2.0
+version: 0.5.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
@@ -29,6 +29,21 @@ For the visual sprint dashboard (epics + stories with status symbols), point the
 - `git log -10` (recent activity)
 
 ## Process
+
+### Step 0 — Cold-start detection (cheap, always done)
+
+If `.agents/memory/overview.md` exists, the project has long-term memory. Check whether the user is **returning after a long gap**:
+
+```bash
+last_commit_age_days=$(( ( $(date +%s) - $(git log -1 --format=%ct 2>/dev/null || date +%s) ) / 86400 ))
+```
+
+- `last_commit_age_days >= 30` → **cold-start mode**: prefix your output with a Welcome-back block (see Output section). Read:
+  - The latest `## État actuel — <date>` block of `.agents/memory/overview.md` (the last one — earlier ones are archived as `## État au <date>`)
+  - The last 3-5 entries of `.agents/memory/journal.md` (tail)
+- `last_commit_age_days < 30` → **warm-start**: skip the Welcome-back block, but you may still cite memory if the user explicitly asks "what did we decide about X".
+
+If `.agents/memory/` does not exist, skip Step 0 entirely (project has no memory layer yet — `flow-retro` populates it).
 
 ### Step 1 — Phase detection
 
@@ -63,6 +78,8 @@ If `sprint-status.yaml` exists, scan `development_status` to find:
 
 ## Output
 
+### Warm-start (default)
+
 4 lines max:
 
 ```
@@ -71,6 +88,29 @@ Reco  : /flow-<name> [args]
 Why   : <one sentence>
 Output: <expected artifact>
 ```
+
+### Cold-start (gap ≥ 30 days, memory layer present)
+
+Prefix the 4-line block with a Welcome-back panel:
+
+```
+Welcome back — last activity <N> days ago.
+
+Project state (per .agents/memory/overview.md):
+<paraphrase the latest État actuel block in 2-3 lines, no padding>
+
+Recent epics:
+- <date> — <epic-id>: <one-line from journal>
+- <date> — <epic-id>: <one-line from journal>
+- <date> — <epic-id>: <one-line from journal>
+
+State : <current phase + key artifact present>
+Reco  : /flow-<name> [args]
+Why   : <one sentence>
+Output: <expected artifact>
+```
+
+Cite verbatim from memory files — never invent. If `overview.md` exists but is empty (no État actuel block yet), say "Project state: memory layer present but no overview yet — run /flow-retro after the next epic."
 
 If the user wants the visual dashboard, append at the end:
 ```
@@ -96,5 +136,13 @@ For the full sprint dashboard, run /flow-status.
 │   ├── stories/
 │   │   └── story-XXX.md
 │   └── retro-epic-XXX.md
+├── memory/                  # long-term, populated by /flow-retro (v0.5+)
+│   ├── overview.md
+│   ├── decisions.md
+│   ├── lessons.md
+│   ├── journal.md
+│   └── glossary.md
+├── internal/                # transient sub-agent outputs (v0.4+)
+│   └── <story-id-or-epic-id>/
 └── project-context.md
 ```

@@ -1,7 +1,7 @@
 ---
 name: flow-recall
 description: 'Pre-flight semantic check: scans the .agents/ corpus before a new intention (brief, PRD update, story creation) and surfaces contradictions, overlaps and co-mentions with what is already frozen. Read-only, advisory — never blocks.'
-version: 0.1.0
+version: 0.8.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
@@ -24,9 +24,21 @@ You DO NOT block. You DO NOT decide. You surface tensions and let the user judge
 - Trivial edits (typo, comment, rename) — overkill.
 - Already inside a story whose epic is well-scoped — the epic file is enough context.
 
-## Ingestion strategy — three layers, narrowing each time
+## Ingestion strategy — four layers, narrowing each time
 
 The `.agents/` corpus can grow large (months of sprints). NEVER read every file in full. Proceed in layers and stop as soon as the signal is sufficient.
+
+### Layer 0 — Long-term memory (cheap, always done if present)
+
+Before scanning the sprint corpus, read `.agents/memory/` if it exists:
+
+- `decisions.md` — ADR-style entries. **Any contradiction with a frozen decision here is the highest possible priority** (ADR-level). Quote the exact `### <date> — <title>` heading when you flag it.
+- `lessons.md` — recurring patterns / mistakes learned across epics. A new intention that violates a captured lesson should appear under **Overlaps** with severity nudged up.
+- `overview.md` (latest `## État actuel` block only) — macro state of the project. Skip if it doesn't relate to the intention.
+
+`glossary.md` and `journal.md` are not loaded — they're for `flow-help`'s cold-start and the human reader, not for recall.
+
+If `.agents/memory/` is absent (no `/flow-retro` has run yet), skip this layer silently and proceed.
 
 ### Layer 1 — Manifest (cheap, always done)
 
@@ -60,7 +72,9 @@ Score each artifact against the new intention using these signals, in order of w
 
 | Signal | Weight | Reasoning |
 |---|---|---|
+| Conflicts with a `decisions.md` ADR entry (Layer 0) | **max+** | ADRs are the deepest frozen layer — surface verbatim |
 | Intention explicitly names an ID (`epic-002`, `story-001-04`) | **max** | User already knows there is a link, confirm and deepen |
+| Violates a captured lesson in `lessons.md` (Layer 0) | high | Past pain — surface to prevent recurrence |
 | Status `done` / `ready` (frozen) | high | Collisions with frozen content are the actual risk |
 | Keyword overlap between intention and H1 title | high | Titles are dense semantic signal |
 | Keyword overlap between intention and H2 intent line | medium | Confirms the topic |
@@ -89,6 +103,7 @@ Write `.agents/recall/recall-<short-slug>-<YYYY-MM-DD>.md`:
 ---
 generated: 2026-MM-DD
 intention: <one-liner verbatim from user>
+memory_scanned: <yes|no>
 corpus_scanned: <N files at layer 2>
 corpus_deep_read: <M files at layer 3>
 ---
@@ -101,12 +116,29 @@ corpus_deep_read: <M files at layer 3>
 
 ## Semantic neighbourhood
 
-### Contradictions (high priority)
+### ADR conflicts (highest priority — long-term memory)
+For each detected conflict with `.agents/memory/decisions.md`:
+- **<decision title>** (recorded <date>, epic <id>)
+  - Frozen ADR: <quote the Decision line verbatim>
+  - Tension: <how the new intention conflicts>
+  - **Question**: (a) supersede ADR (requires explicit revision + new ADR entry), (b) reframe intention, (c) deepen analysis
+
+Omit this section if no `decisions.md` exists or no conflict detected.
+
+### Contradictions (high priority — sprint corpus)
 For each detected contradiction:
 - **<artifact-id> — <title>** (status: <done|ready>)
   - Frozen decision: <quote or paraphrase the prior decision>
   - Tension: <how the new intention conflicts>
   - **Question**: (a) supersede prior decision (creates change story), (b) reconcile by reframing the intention, (c) deepen analysis
+
+### Lessons triggered (medium priority — long-term memory)
+For each captured lesson in `.agents/memory/lessons.md` that the intention risks violating:
+- **<lesson title>** (recorded <date>, epic <id>)
+  - Pattern: <one line>
+  - Risk: <one line on how the intention re-enters this trap>
+
+Omit if none.
 
 ### Overlaps (medium priority)
 - **<artifact-id> — <title>** (status: ...)

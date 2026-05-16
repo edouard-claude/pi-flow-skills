@@ -32,6 +32,11 @@ fi
 # no interactive stdin.
 export FLOW_AUTO=1
 
+# Parallel research wave (flow-story spawns 2 ephemeral pi sub-agents in
+# parallel before writing the story). Set FLOW_PARALLEL=0 to fall back to
+# the v0.3 single-thread context-gathering path.
+export FLOW_PARALLEL="${FLOW_PARALLEL:-1}"
+
 # Stream Pi events for live visibility (instead of a silent screen).
 # Override: PI_MODE=text for concatenated text output at the end.
 PI_MODE="${PI_MODE:-json}"
@@ -150,13 +155,13 @@ sticky_reset() {
 render_header_block_at_top() {
   uvx --quiet --with pyyaml python3 - "$STATUS" "$HEADER_LINES" \
     "$C_RESET" "$C_BOLD" "$C_DIM" "$C_GREEN" "$C_YELLOW" "$C_BLUE" "$C_GRAY" "$C_CYAN" \
-    "$PI_BIN" "$PI_MODE" \
+    "$PI_BIN" "$PI_MODE" "$FLOW_PARALLEL" \
     <<'PY' >&2
 import sys, yaml, re
 status_path = sys.argv[1]
 header_lines = int(sys.argv[2])
 RESET, BOLD, DIM, GREEN, YELLOW, BLUE, GRAY, CYAN = sys.argv[3:11]
-pi_bin, pi_mode = sys.argv[11], sys.argv[12]
+pi_bin, pi_mode, pi_parallel = sys.argv[11], sys.argv[12], sys.argv[13]
 
 with open(status_path) as f:
     data = yaml.safe_load(f)
@@ -201,7 +206,7 @@ lines = [
     f"{BOLD}{CYAN}│              flow-auto — sprint orchestrator             │{RESET}",
     f"{BOLD}{CYAN}╰──────────────────────────────────────────────────────────╯{RESET}",
     f"{DIM}  status: {status_path}{RESET}",
-    f"{DIM}  pi: {pi_bin}  |  mode: {pi_mode}  |  FLOW_AUTO=1{RESET}",
+    f"{DIM}  pi: {pi_bin}  |  mode: {pi_mode}  |  FLOW_AUTO=1  |  FLOW_PARALLEL={pi_parallel}{RESET}",
     "",
     f"{BOLD}Progress{RESET} {bar} {BOLD}{pct}%{RESET} {DIM}({done}/{total}){RESET}",
     f"  {GREEN}● done {done}{RESET}  {YELLOW}● in-flight {in_flight}{RESET}  {BLUE}● ready {ready}{RESET}  {GRAY}● backlog {backlog}{RESET}",
@@ -248,7 +253,7 @@ print_banner() {
   echo "${C_BOLD}${C_CYAN}│              flow-auto — sprint orchestrator             │${C_RESET}" >&2
   echo "${C_BOLD}${C_CYAN}╰──────────────────────────────────────────────────────────╯${C_RESET}" >&2
   echo "${C_DIM}  status: $STATUS${C_RESET}" >&2
-  echo "${C_DIM}  pi: $PI_BIN  |  mode: $PI_MODE  |  FLOW_AUTO=1${C_RESET}" >&2
+  echo "${C_DIM}  pi: $PI_BIN  |  mode: $PI_MODE  |  FLOW_AUTO=1  |  FLOW_PARALLEL=${FLOW_PARALLEL}${C_RESET}" >&2
 }
 
 # Compact dashboard — fits within HEADER_LINES rows when combined with banner.

@@ -1,7 +1,7 @@
 {
   "name": "pi-flow-skills",
-  "version": "0.3.0",
-  "description": "BMAD-inspired sprint workflow for Pi: brainstorm, brief, PRD, architecture, epics, sprint, story/dev/review/commit cycle. Includes flow-auto, a bash orchestrator that pipelines stories through fresh Pi sessions.",
+  "version": "0.8.0",
+  "description": "BMAD-inspired sprint workflow for Pi with parent + parallel sub-agent orchestration and long-term memory. Story/dev/review phases fan out ephemeral Pi sub-agents (research, prior-art, coupling, tests, adversarial reviewers) and synthesize. Epic closeout condenses memory into .agents/memory/ for cold-restart 6-12 months later.",
   "keywords": [
     "pi-package",
     "pi",
@@ -10,6 +10,9 @@
     "workflow",
     "sprint",
     "agent",
+    "subagents",
+    "parallel",
+    "memory",
     "prd",
     "architecture"
   ],
@@ -30,6 +33,7 @@
     "skills",
     "scripts",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ]
 }

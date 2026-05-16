@@ -3,7 +3,7 @@ name: flow-retro
 description: End-of-epic retrospective in party mode (multi-role dialogues), with critical readiness exploration and preparation
   for the next epic. Captures lessons, updates project-context.md, generates action items. Use when all stories of an epic
   are done.
-version: 0.2.0
+version: 0.5.0
 author: Edouard CLAUDE
 url: https://github.com/edouard-claude
 ---
@@ -111,6 +111,26 @@ Short but sincere celebration. Acknowledge wins.
 - **Update `.agents/project-context.md`** if emerging patterns (conventions to lock in for subsequent agents)
 - Update sprint-status: set `development_status[epic-NNN-retrospective]` from `optional` to `done`
 
+#### Step 11b — Long-term memory condensation
+
+Trigger the **memory-condenser** sub-agent over the closing epic. It reads the epic, its stories, this retro, and the existing `.agents/memory/` (if any), then appends the genuinely new material to 5 long-lived files so a developer returning in 6-12 months can pick the project back up in under 5 minutes.
+
+```bash
+WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-retro/wave-memory.sh' 2>/dev/null | head -1)"
+bash "$WAVE" <epic-id> .agents/implementation/retro-epic-<NNN>-<date>.md
+```
+
+The script is **purely additive** (append-only with dedup) and **never fails the retro** — if Pi sub-process errors, the retro continues normally and `.agents/memory/` is left untouched. Disable with `FLOW_PARALLEL=0`.
+
+Files maintained:
+- `.agents/memory/overview.md` — macro project state (replaces last "État actuel" block, archives the previous one as "État au <date>")
+- `.agents/memory/decisions.md` — ADR-style append, dedup by title
+- `.agents/memory/lessons.md` — append, dedup by leading bold title
+- `.agents/memory/journal.md` — one paragraph per epic, always appended
+- `.agents/memory/glossary.md` — domain terms, dedup by term
+
+If `.agents/memory/` does not exist, it is created lazily on first run.
+
 ### Step 12 — Final summary + handoff
 5-line summary:
 - 2-3 wins
@@ -122,6 +142,7 @@ Short but sincere celebration. Acknowledge wins.
 - `.agents/implementation/retro-epic-<NNN>-<date>.md`
 - `.agents/project-context.md` updated if patterns identified
 - `sprint-status.yaml` tagged
+- `.agents/memory/{overview,decisions,lessons,journal,glossary}.md` enriched (via Step 11b)
 
 ## Next
 
