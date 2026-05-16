@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { createRequire as __pflcr } from 'module';
+const require = __pflcr(import.meta.url);
 
 // src/wave-memory.ts
 import { existsSync, readdirSync } from "node:fs";

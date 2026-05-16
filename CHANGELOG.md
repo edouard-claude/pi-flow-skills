@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented here. The format is loosely [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.1] — 2026-05-16
+
+**Bugfix**: `run.mjs` crashed at startup with `Error: Dynamic require of "process" is not supported`. esbuild's pure-ESM output turns transitive `require()` calls (in `yaml`'s runtime) into a guarded stub that throws. Fix: add a `createRequire` shim in the banner so runtime `require()` resolves against the bundle's URL.
+
+`build.mjs` now emits:
+
+```js
+#!/usr/bin/env node
+import { createRequire as __pflcr } from 'module';
+const require = __pflcr(import.meta.url);
+```
+
+at the top of every bundle. Smoke-tested: `run.mjs` now reaches preflight; `wave-*.mjs` unaffected (didn't import yaml).
+
+No source or surface change. Just rebuild and re-tag.
+
 ## [0.9.0] — 2026-05-16
 
 **Theme**: full TypeScript migration. Companion scripts converted from `bash + python + uvx + jq` to self-contained Node ESM bundles. End-user surface unchanged.

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { createRequire as __pflcr } from 'module';
+const require = __pflcr(import.meta.url);
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;

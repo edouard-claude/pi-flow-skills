@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { createRequire as __pflcr } from 'module';
+const require = __pflcr(import.meta.url);
 
 // src/wave-dev.ts
 import { existsSync as existsSync2 } from "node:fs";

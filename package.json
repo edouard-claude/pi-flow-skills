@@ -1,6 +1,6 @@
 {
   "name": "pi-flow-skills",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "BMAD-inspired sprint workflow for Pi with parent + parallel sub-agent orchestration and long-term memory. Story/dev/review phases fan out ephemeral Pi sub-agents (research, prior-art, coupling, tests, adversarial reviewers) and synthesize. Epic closeout condenses memory into .agents/memory/ for cold-restart 6-12 months later.",
   "keywords": [
     "pi-package",

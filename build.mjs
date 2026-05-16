@@ -14,7 +14,13 @@ const ENTRIES = [
   { in: 'src/wave-memory.ts',   out: 'skills/flow/flow-retro/wave-memory.mjs' },
 ];
 
-const SHEBANG = '#!/usr/bin/env node\n';
+// Shebang + ESM-safe require shim. Some transitive deps (e.g. `yaml`) call
+// require() at runtime which esbuild's ESM bundler turns into a guarded
+// stub that throws "Dynamic require of X is not supported" unless we
+// re-introduce a real require via createRequire.
+const BANNER = `#!/usr/bin/env node
+import { createRequire as __pflcr } from 'module';
+const require = __pflcr(import.meta.url);`;
 
 for (const e of ENTRIES) {
   const start = Date.now();
@@ -25,7 +31,7 @@ for (const e of ENTRIES) {
     platform: 'node',
     format: 'esm',
     target: 'node18',
-    banner: { js: SHEBANG.trimEnd() },
+    banner: { js: BANNER },
     legalComments: 'none',
     minify: false,
     sourcemap: false,
