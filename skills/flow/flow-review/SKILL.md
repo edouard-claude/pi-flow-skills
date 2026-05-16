@@ -32,9 +32,11 @@ You orchestrate three reviewers running in parallel ephemeral Pi sessions, then 
 Spawn three reviewers in parallel via the companion wave script. Resolve the path:
 
 ```bash
-WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-review/wave-review.sh' 2>/dev/null | head -1)"
-bash "$WAVE" <story-id>
+WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-review/wave-review.mjs' 2>/dev/null | head -1)"
+"$WAVE" <story-id>
 ```
+
+The script is a self-contained ESM bundle with a shebang — no `bash` or `node` keyword needed.
 
 The script:
 - Extracts touched paths from the story's `## File List` (fallback: `git diff --name-only`).

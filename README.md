@@ -49,18 +49,15 @@ All artifacts are stored under `.agents/` at the project root, feeding the next 
 
 ## Requirements
 
-- **OS**: macOS, Linux, or Windows via WSL / Git Bash. Not tested on native PowerShell.
+- **OS**: macOS, Linux, or Windows. Pure Node, no shell-specific bits.
 - **`pi`** (≥ a recent build supporting `--print`, `--no-session`, `--mode json`, `--append-system-prompt`) — https://pi.dev
-- **`bash`** ≥ 3.2 (default on macOS; any modern Linux)
-- **`uv`** (provides `uvx`) — used to parse `sprint-status.yaml` with PyYAML on the fly. https://docs.astral.sh/uv/
-- **`jq`** — used to format the streamed JSON event flow into readable output. Bypassable with `PI_RAW=1`.
 
-The `flow-auto` orchestrator pre-checks all four. The individual skills (`flow-help`, `flow-prd`, etc.) only require `pi` itself.
+Since v0.9.0 every companion script is a self-contained ESM bundle (`.mjs` with `#!/usr/bin/env node` shebang). The Node runtime that ships with Pi is enough. No `bash`, no `python`, no `uvx`, no `jq` — that's the whole point of the v0.9 migration.
 
 ## Installation
 
 ```bash
-pi install git:github.com/edouard-claude/pi-flow-skills@v0.8.0
+pi install git:github.com/edouard-claude/pi-flow-skills@v0.9.0
 ```
 
 ## Skills (public surface)
@@ -109,14 +106,14 @@ Sub-agents are spawned with `pi --print --no-session --append-system-prompt <pro
 
 ### Companion wave scripts
 
-Each parent has a `wave-*.sh` next to its `SKILL.md`:
+Each parent has a `wave-*.mjs` next to its `SKILL.md` (self-contained ESM bundles, ~7-10 KB each, with `#!/usr/bin/env node` shebang):
 
-- `skills/flow/flow-story/wave-research.sh` — corpus + conventions → synthesize
-- `skills/flow/flow-dev/wave-dev.sh` — similar-impl + dependencies + tests → synthesize
-- `skills/flow/flow-review/wave-review.sh` — blind + edge-cases + acceptance → synthesize
-- `skills/flow/flow-retro/wave-memory.sh` — memory condensation at epic closeout
+- `skills/flow/flow-story/wave-research.mjs` — corpus + conventions → synthesize
+- `skills/flow/flow-dev/wave-dev.mjs` — similar-impl + dependencies + tests → synthesize
+- `skills/flow/flow-review/wave-review.mjs` — blind + edge-cases + acceptance → synthesize
+- `skills/flow/flow-retro/wave-memory.mjs` — memory condensation at epic closeout
 
-Scripts spawn sub-processes with `&` and `wait`, cap concurrency at the number of sub-agents (3 max so far), and never fail the parent if a sub-agent crashes — the parent falls back to a degraded inline path.
+Scripts spawn sub-processes via `child_process.spawn` and `Promise.all`, cap concurrency at the number of sub-agents (3 max so far), and never fail the parent if a sub-agent crashes — the parent falls back to a degraded inline path.
 
 ## Long-term memory (since v0.5)
 
@@ -163,20 +160,22 @@ Every wave honors the environment variable `FLOW_PARALLEL` (default `1`):
 Loops over all `ready-for-dev` stories in `sprint-status.yaml`, running each through the full CREATE → DEV → REVIEW → COMMIT cycle. Each step runs in a fresh Pi session (`pi --print --no-session`), equivalent to a `/clear` between stories.
 
 ```bash
-bash ~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.sh
+~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.mjs
 ```
 
-Path assumes install via `pi install git:github.com/edouard-claude/pi-flow-skills`. For shorter typing, alias it: `alias flow-auto='bash ~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.sh'`.
+Path assumes install via `pi install git:github.com/edouard-claude/pi-flow-skills`. The `#!/usr/bin/env node` shebang dispatches to Node directly — no `bash`, no `node` keyword needed. If you want a short command, add this alias once to your shell profile:
 
-Requirements: `pi`, `uvx` (for YAML parsing), `jq` (for live event formatting).
+```bash
+alias flow-auto='~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/skills/flow/flow-auto/run.mjs'
+```
 
 Override defaults:
-- `PI_MODE=text bash run.sh` — text output instead of streamed JSON events
-- `PI_RAW=1 bash run.sh` — raw JSON passthrough (debug)
+- `PI_MODE=text` — text output instead of streamed JSON events
+- `PI_RAW=1` — raw JSON passthrough (debug)
 - `PI_BIN=/path/to/pi` — alternate Pi binary
-- `NO_COLOR=1 bash run.sh` — disable ANSI colors
-- `NO_STICKY_HEADER=1 bash run.sh` — disable the sticky top header
-- `FLOW_PARALLEL=0 bash run.sh` — disable all parallel waves (v0.3-equivalent behavior)
+- `NO_COLOR=1` — disable ANSI colors
+- `NO_STICKY_HEADER=1` — disable the sticky top header
+- `FLOW_PARALLEL=0` — disable all parallel waves (v0.3-equivalent inline behavior)
 
 ## Artifact layout
 
@@ -213,8 +212,21 @@ Override defaults:
 
 `.agents/internal/` is safe to add to your `.gitignore` if you don't want sub-agent transient outputs tracked.
 
+## Building from source (contributors only)
+
+Users do not need this section — the published bundles are committed and run as-is. Only contributors editing TypeScript need:
+
+```bash
+npm install              # installs typescript, esbuild, yaml as devDependencies
+npm run build            # bundles src/*.ts → skills/**/*.mjs
+npm run typecheck        # strict tsc --noEmit
+```
+
+The bundles in `skills/flow/**/*.mjs` are **committed** so end users skip the build step entirely.
+
 ## Upgrading
 
+- **v0.8.x → v0.9.0**: companion scripts migrated from `bash`/`python` to TypeScript bundles. End-user surface unchanged — slash-commands, sprint-status format, artifact layout, FLOW_PARALLEL flag, all identical. **Side effect**: requirements drop from `pi + bash + uv + jq` down to just `pi`. Existing aliases must change `bash <path>/run.sh` → `<path>/run.mjs` (drop the `bash`, swap the extension).
 - **v0.3.x → v0.8.0**: no breaking change, no migration. New behaviors activate transparently. `.agents/memory/` is created lazily on the next `/flow-retro`. See [CHANGELOG.md](CHANGELOG.md).
 - **v0.1.x → v0.2.0** (legacy breaking change): `sprint-status.yaml` switched to BMAD-compatible flat `development_status` format. Migrate with `~/.pi/agent/git/github.com/edouard-claude/pi-flow-skills/scripts/migrate-v0.2.py .agents/implementation/sprint-status.yaml`.
 

@@ -3,3 +3,4 @@ node_modules/
 *.log
 .idea/
 .vscode/
+# generated bundles ARE committed (skills/**/*.mjs) — do not ignore them

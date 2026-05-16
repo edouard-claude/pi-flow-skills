@@ -116,9 +116,11 @@ Short but sincere celebration. Acknowledge wins.
 Trigger the **memory-condenser** sub-agent over the closing epic. It reads the epic, its stories, this retro, and the existing `.agents/memory/` (if any), then appends the genuinely new material to 5 long-lived files so a developer returning in 6-12 months can pick the project back up in under 5 minutes.
 
 ```bash
-WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-retro/wave-memory.sh' 2>/dev/null | head -1)"
-bash "$WAVE" <epic-id> .agents/implementation/retro-epic-<NNN>-<date>.md
+WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-retro/wave-memory.mjs' 2>/dev/null | head -1)"
+"$WAVE" <epic-id> .agents/implementation/retro-epic-<NNN>-<date>.md
 ```
+
+The script is a self-contained ESM bundle with a shebang — no `bash` or `node` keyword needed.
 
 The script is **purely additive** (append-only with dedup) and **never fails the retro** — if Pi sub-process errors, the retro continues normally and `.agents/memory/` is left untouched. Disable with `FLOW_PARALLEL=0`.
 

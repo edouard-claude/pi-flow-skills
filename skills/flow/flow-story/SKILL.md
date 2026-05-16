@@ -53,9 +53,11 @@ Keep `STORY_SUMMARY` under 5 lines — the sub-agents read the epic/architecture
 **0.4 — Launch the wave.** Resolve the script path (handles both `pi install git:` and manual installs):
 
 ```bash
-WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-story/wave-research.sh' 2>/dev/null | head -1)"
-bash "$WAVE" <story-id>
+WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-story/wave-research.mjs' 2>/dev/null | head -1)"
+"$WAVE" <story-id>
 ```
+
+The script is a self-contained ESM bundle with a `#!/usr/bin/env node` shebang — no `bash` or `node` keyword needed in the invocation. Pi-bundled Node is enough.
 
 The script spawns `research-corpus` + `research-conventions` in parallel (≈30-60s wall time), then runs `synthesize` over both. It writes:
 

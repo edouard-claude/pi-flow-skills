@@ -2,6 +2,55 @@
 
 All notable changes to this project will be documented here. The format is loosely [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.0] — 2026-05-16
+
+**Theme**: full TypeScript migration. Companion scripts converted from `bash + python + uvx + jq` to self-contained Node ESM bundles. End-user surface unchanged.
+
+### Why
+
+The previous architecture required users to install `bash ≥3.2`, `uv` (for `uvx`-driven PyYAML), and `jq` on top of Pi. Since Pi already bundles Node, those three tools are pure overhead. v0.9.0 collapses all companion scripts onto Node and ships them as `.mjs` bundles committed in the repo. Users now need only `pi`. Cross-platform support widens (Windows native, no Git Bash needed).
+
+### Changed (no user-facing surface change)
+
+- `skills/flow/flow-auto/run.mjs` replaces `run.sh` + `md-format.py`. Self-contained ESM, ~287 KB (includes `yaml` and the JSON event parser previously delegated to `jq`).
+- `skills/flow/flow-story/wave-research.mjs` replaces `wave-research.sh`
+- `skills/flow/flow-dev/wave-dev.mjs` replaces `wave-dev.sh`
+- `skills/flow/flow-review/wave-review.mjs` replaces `wave-review.sh`
+- `skills/flow/flow-retro/wave-memory.mjs` replaces `wave-memory.sh`
+- All 5 bundles have a `#!/usr/bin/env node` shebang and are committed executable — invocation is now `<path>/script.mjs <args>` (no `bash`, no `node` keyword).
+- SKILL.md of `flow-story`, `flow-dev`, `flow-review`, `flow-retro`, `flow-auto` updated to reference `.mjs` paths.
+- README requirements section reduced to a single line: `pi`. No more `bash`/`uvx`/`jq` install instructions.
+
+### Added (contributor-facing)
+
+- `src/lib/{ansi,sprint-status,pi-runner,markdown,wave,git}.ts` — shared TypeScript modules
+- `src/flow-auto.ts`, `src/wave-*.ts` — entry points
+- `package.json` declares devDependencies: `typescript`, `esbuild`, `@types/node`, `yaml`
+- `tsconfig.json` — strict mode (`strict: true`, `strictNullChecks`, `noImplicitAny`, `noUnusedLocals`)
+- `build.mjs` — esbuild bundler script (`npm run build`)
+- `npm run typecheck` — `tsc --noEmit`
+- Bundles are deterministic ESM, bundle yaml inline, target node18+.
+
+### Removed
+
+- `skills/flow/flow-auto/run.sh` (kept in git history)
+- `skills/flow/flow-auto/md-format.py`
+- `skills/flow/flow-story/wave-research.sh`
+- `skills/flow/flow-dev/wave-dev.sh`
+- `skills/flow/flow-review/wave-review.sh`
+- `skills/flow/flow-retro/wave-memory.sh`
+
+### Migration
+
+For end users:
+- Re-run `pi install git:github.com/edouard-claude/pi-flow-skills@v0.9.0`
+- If you had an alias `alias flow-auto='bash ~/.pi/.../run.sh'`, change to `alias flow-auto='~/.pi/.../run.mjs'` (drop the `bash`, swap the extension)
+- No changes to `.agents/` artifact layout, `sprint-status.yaml` format, or slash-command behavior
+
+For contributors:
+- Edit `src/*.ts` then run `npm run build` before committing
+- The `.mjs` bundles in `skills/**/*.mjs` are part of the source of truth (committed)
+
 ## [0.8.0] — 2026-05-16
 
 **Theme**: parent-orchestrator architecture with parallel ephemeral Pi sub-agents + long-term memory layer.

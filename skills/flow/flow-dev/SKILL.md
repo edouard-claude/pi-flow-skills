@@ -40,9 +40,11 @@ If resuming from `review` with `[AI-Review]` items, address those first. Skip St
 Three parallel ephemeral Pi sub-agents map the surrounding territory so you don't reinvent or break parallel work. Resolve the script path:
 
 ```bash
-WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-dev/wave-dev.sh' 2>/dev/null | head -1)"
-bash "$WAVE" <story-id>
+WAVE="$(find "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" -path '*flow-dev/wave-dev.mjs' 2>/dev/null | head -1)"
+"$WAVE" <story-id>
 ```
+
+The script is a self-contained ESM bundle with a shebang — no `bash` or `node` keyword needed.
 
 The script writes:
 
